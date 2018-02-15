@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-std=c++14 -g -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++14 -Wall -O2")
 
 link_directories($ENV{LUA_LIB_PATH})
+include_directories($ENV{LUA_INCLUDE_PATH})
 
 set(LUA_INCLUDES lua/lua.hpp lua/lua.h lua/lualib.h lua/lauxlib.h lua/luaconf.h)
 set(TOOLBOX toolbox/FileSystemHelper.cpp toolbox/FileSystemHelper.h toolbox/KeyValueStore.cpp toolbox/KeyValueStore.h toolbox/LinkedMap.cpp toolbox/LinkedMap.h toolbox/LuaWrapper.cpp toolbox/LuaWrapper.h ${LUA_INCLUDES} toolbox/StatisticsHelper.cpp toolbox/StatisticsHelper.h toolbox/StringHelper.cpp toolbox/StringHelper.h toolbox/TextTemplate.cpp toolbox/TextTemplate.h toolbox/TimeHelper.cpp toolbox/TimeHelper.h toolbox/Version.cpp toolbox/Version.h)
