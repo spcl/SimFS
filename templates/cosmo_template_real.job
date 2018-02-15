@@ -1,0 +1,41 @@
+
+source ../PATHS.in
+
+
+export SIMSTART=$simstart
+export SIMSTOP=$simstop
+export DV_SIMULATOR=1
+export DV_JOBID=$jobid
+export DV_GNI_ADDR=$gni_addr
+export LD_PRELOAD=$$SDAVI_DIR/lib/libdvl.so
+export EXE_DIR=$$COSMO_DIR
+
+simdir=i_$${SLURMID}_$${DV_JOBID}
+cd $$EXE_DIR/
+
+mkdir runs/$$simdir >/dev/null 2>/dev/null
+cp runs/* runs/$$simdir 2>/dev/null
+
+cd runs/$$simdir
+
+sed -e "s/__START__/$$SIMSTART/g" -e "s/__STOP__/$$SIMSTOP/g" INPUT_ORG_TEMPLATE > INPUT_ORG
+sed -e "s/__OUTDIR__/$$output_path_rel/g" INPUT_IO_TEMPLATE > INPUT_IO
+
+$$COSMO_RUN_CMD > $$SDAVI_DIR/logs/$$LOG_DIR/cosmo.$${DV_JOBID}.out 2> $$SDAVI_DIR/logs/$$LOG_DIR/cosmo.$${DV_JOBID}.err &
+
+
+#1) Copy the data from somewhere in project/ [SIMSTART, SIMSTOP]
+#2) Extract and interpolate
+
+
+#3) 12Km job
+#4) Interpolate
+
+
+#5) 2Km + dependency with 12Km one
+
+#6) Copy to project/ (only first run)
+
+
+echo -n $$DV_JOBID
+

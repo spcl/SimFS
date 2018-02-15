@@ -1,0 +1,446 @@
+-- -----------------------------------------------------------------------------
+-- DV configuration script: for specific FLASH Sedov simulator instances
+-- -----------------------------------------------------------------------------
+-- note: many of the config variables/constants can be overwritten
+-- by command line arguments when running dv.
+-- see list when calling dv --help
+-- -----------------------------------------------------------------------------
+-- note: it's a Lua script that conforms to a given public API
+-- and can use some additional built-in DV specific callback
+-- functions: see prefix cb_.
+-- for Lua: see https://www.lua.org/manual/5.3/ for syntax and
+-- available functions
+-- noteworthy:
+--    Lua uses ~= and not != for inequality test
+--    // is integer division
+--    string index positions are 1 based and not 0 based
+-- v1.5 2017-05-12 / 2017-09-23 Pirmin Schmid
+-- -----------------------------------------------------------------------------
+
+
+-- -----------------------------------------------------------------------------
+-- PUBLIC INTERFACE with DV (no change of names / signatures here)
+-- variables may be initialized during init()
+-- they will not be accessed by DV before
+-- however, they should not be changed afterwards (they are cached in the DV code)
+-- do not modify the names or signatures of the variables/functions
+-- of this public API
+-- -----------------------------------------------------------------------------
+
+-- integer >= 0
+api_version = 5
+
+
+-- dv server -------------------------------------------------------------------
+
+-- string: name or IP address
+dv_hostname = "127.0.0.1"
+
+-- strings
+dv_client_port = "8888"
+dv_sim_port = "8889"
+dv_batch_job_id = "0_0"
+dv_statistics_label = "na"
+
+-- ints
+dv_max_parallel_simjobs = 2
+dv_max_horizontal_prefetching_intervals = 1
+dv_max_vertical_prefetching_intervals = 1
+
+-- optional
+-- 1 for true; 0 for false
+-- note: true implies that optional_sim_max_nr *must* be set correctly
+optional_dv_prefetch_all_files_at_once = 0
+
+
+-- simulator -------------------------------------------------------------------
+
+-- strings
+sim_config_path = ""
+sim_checkpoint_path = ""
+sim_result_path = ""
+sim_temporary_redirect_path = "/tmp/"
+
+-- strings, keep = "" if not used
+-- note re output files:
+-- UID, APPID, JOBID can be used in the filename;
+-- they will be replaced by actual values during job generation.
+-- template_style:
+--    0 for not used
+--    1 for {{key}} style
+--    2 for $key and $(key) style; note $$ must be used for $ in output file
+sim_parameter_template_style = 2
+sim_parameter_template_file = ""
+sim_parameter_output_file = "flash_UID_APPID_JOBID.par"
+
+sim_job_template_style = 2
+sim_job_template_file = ""
+sim_job_output_file = "flash_run_simjob_UID_APPID_JOBID.sh"
+
+-- int
+sim_kill_threshold = 10
+
+-- int; only needed for optional_dv_prefetch_all_files_at_once == 1
+-- i.e. create all files; is calculated during init, if needed
+optional_sim_max_nr = 0
+
+-- file cache ------------------------------------------------------------------
+
+-- string: unlimited LRU ARC LIRS BCL DCL PLRU PBCL PDCL
+filecache_type = "LRU"
+
+-- int > 0
+filecache_size = 1000
+
+-- int >= 0 and < file_cache_size
+filecache_fifo_queue_size = 0
+
+-- int > 0 and < (filecache_size - filecache_fifo_queue_size); only needed for LIRS
+filecache_lir_set_size = 800
+
+-- int in range [1, (filecache_size - filecache_fifo_queue_size)]
+filecache_protected_mrus = 1
+
+-- double in range [0.0, 1.0]
+filecache_penalty_factor = 0.0
+
+
+-- functions -------------------------------------------------------------------
+
+-- return 1 (true) in case of success; or 0 (false) in case of error
+function init(dv_api_version)
+	-- check env variables
+	e = os.getenv("DV_PROXY_SRV_IP")
+	if e ~= nil then
+		dv_hostname = e
+	end
+
+	e = os.getenv("DV_SIM_PORT")
+	if e ~= nil then
+		dv_sim_port = e
+	end
+
+	e = os.getenv("DV_CLIENT_PORT")
+	if e ~= nil then
+		dv_client_port = e
+	end
+
+	e = os.getenv("SLURMID")
+	if e ~= nil then
+		dv_batch_job_id = e
+	end
+
+	e = os.getenv("LSB_NAME")
+	if e ~= nil then
+		dv_statistics_label = e
+	end	
+
+	e = os.getenv("PREFETCH")
+	if e ~= nil then
+		dv_prefetch_opt = e
+	end
+
+	-- cache settings: ENV at the moment
+	-- overwriting with command line arguments follows
+	e = os.getenv("DV_FILECACHE_TYPE")
+	if e ~= nil then
+		filecache_type = e
+	end
+
+	e = os.getenv("DV_FILECACHE_SIZE")
+	if e ~= nil then
+		filecache_size = checkint(e, 1, math.maxinteger, -1, "ENV variable DV_FILECACHE_SIZE must be an integer > 0")
+		if filecache_size == -1 then
+			return 0
+		end
+	end
+
+	e = os.getenv("DV_FILECACHE_PROTECTED_MRUS")
+	if e ~= nil then
+		filecache_protected_mrus = checkint(e, 1, filecache_size, -1, "ENV variable DV_FILECACHE_PROTECTED_MRUS must be an integer in [1, cache_size]")
+		if filecache_protected_mrus == -1 then
+			return 0
+		end
+	end
+
+	e = os.getenv("DV_FILECACHE_PENALTY_FACTOR")
+	if e ~= nil then
+		filecache_penalty_factor = checknumber(e, 0.0, 1.0, -1.0, "ENV variable DV_FILECACHE_PENALTY_FACTOR must be a number in [0.0, 1.0]")
+		if filecache_penalty_factor < 0.0 then
+			return 0
+		end
+	end
+
+	-- setting this option: implies that optional_sim_max_nr must be set during private init.
+	e = os.getenv("DV_PREFETCH_ALL_FILES_AT_ONCE")
+	if e ~= nil then
+		n = checkint(e, 0, 1, -1, "optional ENV variable DV_PREFETCH_ALL_FILES_AT_ONCE must bei either 0 or 1; assumed == 0 if lacking")
+		if n == -1 then
+			return 0
+		else
+			optional_dv_prefetch_all_files_at_once = n
+		end
+	end
+
+	-- handle private initialization
+	p = private_init()
+	if p == 0 then
+		return 0
+	end
+
+	-- handle optional flags (may depend on private init)
+	if optional_dv_prefetch_all_files_at_once == 1 then
+		if optional_sim_max_nr == 0 then
+			print("Error: optional_sim_max_nr must have been set during config if optional_dv_prefetch_all_files_at_once is active")
+			return 0
+		end
+	end
+ 
+	-- default OK, if we get here
+	return 1
+end
+
+
+-- is called by check_dv_config_file after init()
+-- this function is *not* called by the DV server
+-- any checks that should be performed to assure correct
+-- and stable functionality of this configuration script
+-- it can also be used to familiarize yourself with the config
+-- syntax with a very short write-test-reply time. 
+-- output and input can be used (this will not be run by the server)
+-- return 1 (true) in case of success; or 0 (false) in case of error
+function run_checks(dv_api_version)
+	print("Hello")
+
+	n = "sedov_hdf5_chk_0005"
+	t = get_checkpoint_file_type(n)
+	if 0 < t then
+		nr = checkpoint2nr(n, t)
+	else
+		nr = -1
+	end
+	print(n .. ": checkpoint type ok? " .. t .. " nr (-1 if not availble: " .. nr)
+
+	n = "sedov_hdf5_plt_0005"
+	t = get_checkpoint_file_type(n)
+	if 0 < t then
+		nr = checkpoint2nr(n, t)
+	else
+		nr = -1
+	end
+	print(n .. ": checkpoint type ok? " .. t .. " nr (-1 if not availble: " .. nr)
+
+
+	n = "sedov_hdf5_chk_0005"
+	t = get_result_file_type(n)
+	if 0 < t then
+		nr = result2nr(n, t)
+	else
+		nr = -1
+	end
+	print(n .. ": result type ok? " .. t .. " nr (-1 if not availble: " .. nr)
+
+	n = "sedov_hdf5_plt_0005"
+	t = get_result_file_type(n)
+	if 0 < t then
+		nr = result2nr(n, t)
+	else
+		nr = -1
+	end
+	print(n .. ": result type ok? " .. t .. " nr (-1 if not availble: " .. nr)
+
+	print()
+	print("final adjustments for simstart 160, simstop 180")
+	print(simjob_final_adjustments("", 160, 180))
+
+	print()
+	print("final adjustments for simstart 0, simstop 20")
+	print(simjob_final_adjustments("", 0, 20))
+
+	return 1
+end
+
+-- note re FLASH file names (see checks and resolutions below)
+-- FLASH has only one file type at the moment
+-- with respect to name2nr resolution
+-- also: no sub-folders are used -> no need to use basename()
+
+-- returns checkpoint file type nr (or 0 for not a result file)
+-- it replaces former is_checkpoint_file() check
+function get_checkpoint_file_type(filename)
+	if string.sub(filename, 1, flash_checkpoint_prefix_len) == flash_checkpoint_prefix then
+		return 1
+	else
+		return 0
+	end
+end
+
+
+-- assumes proper filename (see check above)
+-- return value must be an integer >= 0
+function checkpoint2nr(filename, checkpoint_file_type)
+	return flash_checkpoint_multiplier * math.tointeger(string.sub(filename, -4))
+end
+
+
+-- returns result file type nr (or 0 for not a result file)
+-- it replaces former is_result_file() check
+function get_result_file_type(filename)
+	if string.sub(filename, 1, flash_result_prefix_len) == flash_result_prefix then
+		return 1
+	else
+		return 0
+	end
+end
+
+
+-- return value must be an integer >= 0
+function result2nr(filename, result_file_type)
+	return math.tointeger(string.sub(filename, -4))
+end
+
+
+-- this function is called after simjob generation but before
+-- actually substituting the variables in the template files
+-- final adjustments can be made for the specific simulator
+-- simstart and simstop are provided as integer values
+-- (may need modifications most frequently)
+-- additionally, map_string contains the entire substitution hashmap
+-- in a "key1=value1;key2=value2; ..." format
+-- note: input simstart == number corresponding to restart/checkpoint
+--       input simstop == (number for next restart/checkpoint) - 1
+--                  or == target_nr if there is no ceiling checkpoint
+-- the function returns a string in a similar map_string format
+-- however, only updates must be returned, not the entire map_string
+-- typically, it will just look like "simstart=nr;simstop=nr"
+-- better use string.format to assure int type output
+-- note: simstart and simstart return values will only adjust
+-- the key value store for template writing but not the internal
+-- values used for SimJob.willProduce() checks.
+function simjob_final_adjustments(map_string, simstart, simstop)
+	restart = ".false."
+	use_checkpoint_nr = 0
+	first_output_file_nr = 0
+
+	if 0 < simstart then
+		restart_nr = simstart // flash_checkpoint_multiplier
+		restart = ".true."
+		use_checkpoint_nr = restart_nr
+		first_output_file_nr = simstart
+	end
+
+	actual_tmax = (simstop + 1) * flash_result_delta_t - flash_t_epsilon
+	if flash_t_max < actual_tmax then
+		actual_tmax = flash_t_max
+	end
+
+	return string.format("simstart=%d;simstop=%d;__RESTART__=%s;__USE_CHECKPOINT_NR__=%d;__FIRST_OUTPUT_FILE_NR__=%d;__TMAX__=%f",
+		simstart, simstop, restart, use_checkpoint_nr, first_output_file_nr, actual_tmax)
+end
+
+
+-- -----------------------------------------------------------------------------
+-- PRIVATE IMPLEMENTATION HELPERS
+-- add additional variables / functions here as needed
+-- -----------------------------------------------------------------------------
+
+-- return 1 (true) in case of success; or 0 (false) in case of error
+function private_init()
+	-- for compatibility, also check for optional use of former flag to prefetch all
+	e = os.getenv("PREFETCH_OPT")
+	if e ~= nil then
+		n = tonumber(e)
+		if n == nil then
+			print("ENV variable PREFETCH_OPT must be a number")
+			return 0
+		end
+
+		if n < 0.0 then
+			optional_dv_prefetch_all_files_at_once = 1
+		end
+	end
+
+	if optional_dv_prefetch_all_files_at_once == 1 then
+		optional_sim_max_nr = math.tointeger()
+	end
+
+	-- FLASH simulation specific things
+	e = os.getenv("FLASH_TEMPLATE_PAR")
+	if e == nil then
+		print("ENV variable FLASH_TEMPLATE_PAR must be set")
+		return 0
+	end
+	sim_parameter_template_file = e
+
+	e = os.getenv("FLASH_TEMPLATE_JOB")
+	if e == nil then
+		print("ENV variable FLASH_TEMPLATE_JOB must be set")
+		return 0
+	end
+	sim_job_template_file = e
+
+	return 1
+end
+
+-- specific prefixes for file type detection
+flash_checkpoint_prefix = "sedov_hdf5_chk_"
+flash_result_prefix = "sedov_hdf5_plt_"
+
+flash_checkpoint_prefix_len = string.len(flash_checkpoint_prefix)
+flash_result_prefix_len = string.len(flash_result_prefix)
+
+-- simulation specific settings
+flash_t_max = 1.0
+flash_t_epsilon = 0.001
+
+flash_checkpoint_delta_t = 0.1
+flash_result_delta_t = 0.005
+
+flash_checkpoint_multiplier = 20 
+
+
+-- helper function to remove path
+function basename(filename)
+	i = string.len(filename)
+	if i == 0 then
+		return ""
+	end
+
+	while i > 0 do
+		if string.sub(filename, i, i) == "/" then
+			break
+		end
+		i = i - 1
+	end
+	return string.sub(filename, i + 1)
+end
+
+
+-- helper functions for input validation
+function checkint(str, min, max, error_value, error_message)
+	n = math.tointeger(str)
+	if n ~= nil then
+		if min <= n and n <= max then
+			return n
+		end
+	end
+	
+	print(error_message)
+	return error_value
+end
+
+function checknumber(str, min, max, error_value, error_message)
+	n = tonumber(str)
+	if n ~= nil then
+		if min <= n and n <= max then
+			return n
+		end
+	end
+
+	print(error_message)
+	return error_value
+end
+
+-- -----------------------------------------------------------------------------
+-- end
+-- -----------------------------------------------------------------------------

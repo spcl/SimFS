@@ -1,0 +1,17 @@
+export SIMSTART=$simstart
+export SIMSTOP=$simstop
+export DV_SIMULATOR=1
+export DV_JOBID=$jobid
+export DV_GNI_ADDR=$gni_addr
+export LD_PRELOAD=$$SDAVI_DIR/lib/libdvl.so
+export EXE_DIR=$$SDAVI_DIR/tests/mocksim/COSMO/
+export LSB_OUTFILE="simulator"
+
+cd $$EXE_DIR
+
+#sed -e "s/__START__/$$SIMSTART/g" -e "s/__STOP__/$$SIMSTOP/g" $$EXE_DIR/INPUT_ORG_TEMPLATE > $$EXE_DIR/INPUT_ORG
+
+#cp mockresults_full/lfff00000000.nc mockresults
+./start_cosmo_mock_simulator.sh > $$SDAVI_DIR/logs/$$LOG_DIR/cosmo.mock.$${DV_JOBID}.out 2> $$SDAVI_DIR/logs/$$LOG_DIR/cosmo.mock.$${DV_JOBID}.err
+
+echo -n $$DV_JOBID

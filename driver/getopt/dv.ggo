@@ -1,0 +1,32 @@
+# command line options for DV server
+# version 0.9.17, 2017-09-25, Pirmin Schmid
+# note: PACKAGE and VERSION are set in dv.h header file
+# to avoid adjustments in various files for such changes
+
+text    "\nServer"
+option  "hostname"           H "host name or IP address" string optional
+option  "simulator-port"     S "simulator port" string typestr="portnumber" optional
+option  "client-port"        C "client port" string typestr="portnumber" optional
+
+text    "\nPaths"
+option  "simulator"          s "simulator configuration path" string optional
+option  "checkpoints"        c "checkpoint/restart files path" string optional
+option  "results"            r "result files path" string optional
+option  "dummy"              d "temporary redirect dummy path" string optional
+
+text    "\nFile cache (unlimited, LRU, ARC, LIRS BCL, DCL, PLRU, PBCL, PDCL)"
+option  "filecache-type"           t "cache type" string optional
+option  "filecache-size"           n "cache size" long optional
+option  "filecache-fifo-size"      f "size of the fifo queue (default 0)" long optional
+option  "filecache-lir-set-size"   l "LIR set size for LIRS" long optional
+option  "filecache-mrus"           m "reserved MRUs" long optional
+option  "filecache-penalty"        p "penalty factor" double optional
+
+text    "\nPrefetching"
+option  "prefetch-intervals"             i "max. number of intervals to be prefetched (sets vertical to value and horizontal to 1)" long optional
+option  "horizontal-prefetch-interval"   a "max. number of intervals to be prefetched in one simulation (horizontal)" long optional
+option  "vertical-prefetch-interval"     b "max. number of intervals to be prefetched by multiple simulations (vertical)" long optional
+option  "parallel-simulators"            x "max. number of simulators running in parallel" long optional
+option  "sim-kill-threshold"             k "threshold for stopping a running simulator" long optional
+
+text    "\n"
