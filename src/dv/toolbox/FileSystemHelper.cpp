@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <fstream>
 
 
 namespace toolbox {
@@ -151,4 +152,23 @@ namespace toolbox {
 		}
 		return std::string(b);
 	}
+
+    int FileSystemHelper::mkDir(const std::string &path){
+        mode_t flags =  S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+        return mkdir(path.c_str(), flags);       
+    }
+
+
+    void FileSystemHelper::cpFile(const std::string &origin, const std::string &dest){
+        printf("copying from %s to %s\n", origin.c_str(), dest.c_str());
+        std::ifstream src(origin, std::ios::binary);
+        std::ofstream dst(dest,   std::ios::binary);
+
+        dst << src.rdbuf();
+    
+        dst.close();
+        src.close();
+    }
+        
 }
+

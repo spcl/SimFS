@@ -52,6 +52,9 @@ struct gengetopt_args_info
   char * client_port_arg;	/**< @brief client port.  */
   char * client_port_orig;	/**< @brief client port original value given at command line.  */
   const char *client_port_help; /**< @brief client port help description.  */
+  char * conf_file_arg;	/**< @brief configuration file.  */
+  char * conf_file_orig;	/**< @brief configuration file original value given at command line.  */
+  const char *conf_file_help; /**< @brief configuration file help description.  */
   char * simulator_arg;	/**< @brief simulator configuration path.  */
   char * simulator_orig;	/**< @brief simulator configuration path original value given at command line.  */
   const char *simulator_help; /**< @brief simulator configuration path help description.  */
@@ -103,6 +106,7 @@ struct gengetopt_args_info
   unsigned int hostname_given ;	/**< @brief Whether hostname was given.  */
   unsigned int simulator_port_given ;	/**< @brief Whether simulator-port was given.  */
   unsigned int client_port_given ;	/**< @brief Whether client-port was given.  */
+  unsigned int conf_file_given ;	/**< @brief Whether conf-file was given.  */
   unsigned int simulator_given ;	/**< @brief Whether simulator was given.  */
   unsigned int checkpoints_given ;	/**< @brief Whether checkpoints was given.  */
   unsigned int results_given ;	/**< @brief Whether results was given.  */
@@ -119,8 +123,6 @@ struct gengetopt_args_info
   unsigned int parallel_simulators_given ;	/**< @brief Whether parallel-simulators was given.  */
   unsigned int sim_kill_threshold_given ;	/**< @brief Whether sim-kill-threshold was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

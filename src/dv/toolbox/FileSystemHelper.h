@@ -97,6 +97,20 @@ namespace toolbox {
  		 */
 		static std::string getDirname(const std::string &path);
 
+
+		/**
+ 		 * creates the folder specified by path with read/write/search 
+         * permissions for owner and group, and with read/search permissions 
+         * for others).
+         * @return 0 if success, -1 otherwise (errno is set)
+ 		 */
+        static int mkDir(const std::string &path);
+        
+        /**
+         * copies a file from origin to dest 
+         */
+        static void cpFile(const std::string &origin, const std::string &dest);
+
 	private:
 		static void readDirRecursive(const std::string &path,
 							handle_file_type callback,

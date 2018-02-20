@@ -7,6 +7,7 @@ text    "\nServer"
 option  "hostname"           H "host name or IP address" string optional
 option  "simulator-port"     S "simulator port" string typestr="portnumber" optional
 option  "client-port"        C "client port" string typestr="portnumber" optional
+option  "conf-file"          F "configuration file" string optional
 
 text    "\nPaths"
 option  "simulator"          s "simulator configuration path" string optional
