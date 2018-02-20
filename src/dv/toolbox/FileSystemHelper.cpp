@@ -160,7 +160,6 @@ namespace toolbox {
 
 
     void FileSystemHelper::cpFile(const std::string &origin, const std::string &dest){
-        printf("copying from %s to %s\n", origin.c_str(), dest.c_str());
         std::ifstream src(origin, std::ios::binary);
         std::ofstream dst(dest,   std::ios::binary);
 
@@ -169,6 +168,20 @@ namespace toolbox {
         dst.close();
         src.close();
     }
-        
+ 
+    std::string FileSystemHelper::getCwd(){
+        size_t currlen = PATH_LEN;
+        char * path = (char *) malloc(sizeof(char)*currlen);
+        while (getcwd(path, currlen)==NULL){
+            currlen *= 2;
+            free(path);
+            path = (char *) malloc(sizeof(char)*currlen);
+        }
+        std::string spath(path);
+        free(path);        
+
+        return spath;
+    }
+       
 }
 

@@ -11,6 +11,9 @@
 #include <functional>
 #include <string>
 
+#define PATH_LEN 2048
+
+
 namespace toolbox {
 
 	/**
@@ -110,6 +113,12 @@ namespace toolbox {
          * copies a file from origin to dest 
          */
         static void cpFile(const std::string &origin, const std::string &dest);
+
+
+        /**
+         * get the current working directory 
+         */
+        static std::string getCwd();
 
 	private:
 		static void readDirRecursive(const std::string &path,

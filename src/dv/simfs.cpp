@@ -19,13 +19,34 @@
 
 
 using namespace dv;
+using namespace toolbox;
+using namespace std;
 
 volatile int gdbstop;
 
 namespace simfs { 
 
-    std::string find_conf(){
-        return 0;
+    string find_conf(){
+        string current_path = FileSystemHelper::getCwd();
+        while (!FileSystemHelper::folderExists(current_path + "/" + DIR_SIMFS) && current_path!="/"){
+            current_path = FileSystemHelper::getDirname(current_path);
+        }
+
+        if (current_path=="/"){
+            LOG(ERROR, "This is not a SimFS envirorment!");
+            return "";
+        }
+               
+        string conf_file = current_path + "/" + DIR_SIMFS + "/conf.dv";
+        
+        if (!FileSystemHelper::fileExists(conf_file)) {
+            LOG(ERROR, "SimFS configuration file not found!");
+            return "";
+        }
+        
+        LOG(INFO, "Configuration file found in: " + conf_file);
+
+        return conf_file;
     }
 
     int init(char * conf_file){
@@ -38,7 +59,6 @@ namespace simfs {
  
         return 0;    
     }
-
 }
 
 
@@ -85,9 +105,10 @@ int main(int argc, char * argv[]){
         if (conf_file != "") { 
             DV * dv = DVCreate(args_info, conf_file);
             if (dv==NULL){ exit(1); }
-            else { dv->run(); }
-        }else{
-            error_exit(argv[0], "SimFS configuration file not found!");
+            else { 
+                dv->run(); 
+                delete dv;
+            }
         }
     }
 
