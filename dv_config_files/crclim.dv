@@ -34,7 +34,7 @@ api_version = 5
 -- dv server -------------------------------------------------------------------
 
 -- string: name or IP address
-dv_hostname = "127.0.0.1"
+dv_hostname = "0.0.0.0"
 
 -- strings
 dv_client_port = "8888"
@@ -54,6 +54,8 @@ optional_dv_prefetch_all_files_at_once = 0
 
 
 -- simulator -------------------------------------------------------------------
+
+cosmo_sim_start="2006100100"
 
 -- strings
 sim_config_path = "/users/salvodg/sdavi/jobs/"
@@ -317,12 +319,7 @@ function private_init()
 	end
 
 	-- this ENV variable is a must
-	e = os.getenv("COSMO_SIMSTART")
-	if e == nil then
-		print("ENV variable COSMO_SIMSTART must be set (format YYYYMMDDHH)")
-		return 0
-	end
-	cosmo_absolute_simstart_str = e
+	cosmo_absolute_simstart_str = cosmo_sim_start
 	cosmo_absolute_simstart = cb_datestr2seconds(cosmo_absolute_simstart_str, "%Y%m%d%H") // cosmo_seconds_per_id_increment
 
 
