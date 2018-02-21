@@ -75,7 +75,7 @@ def update():
     y = np.arange(0, 100)
 
     #last = solver.compute(i, last);
-    data = get_data("../output/data_" + str(i) + ".out")
+    data = get_data("../output/data_" + str(i))
 
     #data = last.data
 

@@ -32,6 +32,7 @@ namespace dv {
 
 	DV::DV(std::unique_ptr<DVConfig> config) : config_(std::move(config)) {
 		jobqueue_.setMaxSimJobs(config_->dv_max_parallel_simjobs_);
+		ip_address_ = config_->dv_hostname_;
 	}
 
 	DVConfig *DV::getConfigPtr() const {
@@ -416,8 +417,6 @@ namespace dv {
 	void DV::startServer() {
 		sim_socket_ = startServerPart(config_->dv_sim_port_);
 		client_socket_ = startServerPart(config_->dv_client_port_);
-		// TODO: improve this if host is not an IP address
-		ip_address_ = config_->dv_hostname_;
 		std::cout << std::endl << "DV server online. simulator: " << config_->dv_hostname_ << ":" << config_->dv_sim_port_
 				  << ", client: " << config_->dv_hostname_ << ":" << config_->dv_client_port_ << std::endl
 				  << "dv_max_prefetching_intervals " << config_->dv_max_prefetching_intervals_

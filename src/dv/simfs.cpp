@@ -9,11 +9,14 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 
 #define DIR_SIMFS ".simfs"
 
 #define SIMFS_WORKSPACE "/home/salvo/simfs"
+#define SIMFS_DVLIB "/home/salvo/ETH/SimFS/lib/libdvl.so"
+
 #define SIMFS_WSNAME "workspace"
 
 #define CONF_NAME "conf.dv"
@@ -25,7 +28,7 @@
 #define SIMFS_START "start"
 #define SIMF_LS "ls"
 #define SIMFS_INDEX "index"
-#define SIMFS_VIRTUALIZE "virtualize"
+#define SIMFS_RUN "run"
 
 
 using namespace dv;
@@ -66,7 +69,6 @@ namespace simfs {
     int loadWorkspace(KeyValueStore &ws){
         /* check if the workspace exists */
         if (!FileSystemHelper::folderExists(SIMFS_WORKSPACE)){
-            printf("Creating workspace: %s\n", SIMFS_WORKSPACE);
             if (FileSystemHelper::mkDir(SIMFS_WORKSPACE)) return 0;
         }
 
@@ -141,12 +143,6 @@ int main(int argc, char * argv[]){
 
     std::string cmd(argv[1]);    
 
-
-    if (cmd == SIMFS_VIRTUALIZE){
-        /* we do not parse the arguments in this case */
-        
-    }
-
     
     /* Executing commands*/
     if (cmd == SIMFS_INIT){
@@ -161,7 +157,7 @@ int main(int argc, char * argv[]){
 
         simfs::initEnvirorment(ws, env, conf_file);
 
-    }else if (cmd == SIMFS_VIRTUALIZE){
+    }else if (cmd == SIMFS_RUN){
         if (argc<3){
             error_exit(argv[0], "Invalid syntax. See usage.");
         }
@@ -170,6 +166,10 @@ int main(int argc, char * argv[]){
         if (!ws.hasKey(env)){ error_exit(argv[0], "This environment does not exit!"); }
         std::string conf_file = ws.getString(env) + CONF_NAME;
 
+        printf("SimFS envirorment: %s\n", env.c_str());
+
+        setenv("LD_PRELOAD", SIMFS_DVLIB, 1);
+
         /* Check if there is a known IP/PORT for it */
         if (ws.hasKey(IPKEY(env)) && ws.hasKey(PORTKEY(env))){
             string ip = ws.getString(IPKEY(env));
@@ -177,7 +177,11 @@ int main(int argc, char * argv[]){
             
             printf("DV should be listening on %s:%s\n", ip.c_str(), port.c_str());
 
+            setenv("DV_PROXY_SRV_IP", ip.c_str(), 1);
+            setenv("DV_PROXY_SRV_PORT", port.c_str(), 1);
         }
+    
+        execvpe(argv[3], &(argv[3]), environ);
 
        
     }else if (cmd == SIMFS_START){
@@ -210,7 +214,7 @@ int main(int argc, char * argv[]){
             vector<string> ips;
             NetworkHelper::getAllIPs(ips);
             ip = "";
-            for (auto lip : ips){ ip = ip + lip + ","; }            
+            for (auto lip : ips){ ip = ip + lip + ","; }       
         }
 
         std::string port = dv->getClientPort();        
