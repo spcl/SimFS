@@ -95,7 +95,11 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         
                 /*send fake get message to get the notification */
                 MAKE_MESSAGE(buff, msgsize, "%c:%s:%i:%i:", DVL_MSG_VGET, dfile->path, 0, dvl.gni.myrank);
+
+                printf("sending (%i): %s\n", msgsize, buff);
                 if (msgsize<0) return DVL_ERROR;
+                
+
                 dvl_send_message(buff, msgsize, 0);
             
                 /* wait for notification */

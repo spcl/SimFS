@@ -30,6 +30,7 @@ animating=False
 def key_press_handler(event):
     global direction
     global animating
+    already_animating = animating
     print('press', event.key)
     if (event.key=='right'):
         print("right")
@@ -39,7 +40,9 @@ def key_press_handler(event):
         direction=0
     elif (event.key==' '):
         animating=not animating
-    update()
+
+    if (not already_animating): update()
+    
 
 
 def get_data(filename):

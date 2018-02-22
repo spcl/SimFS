@@ -28,7 +28,7 @@ int nc_create(char *path, int cmode, int * ncidp){
 
 int nc_get_vara(int ncid, int varid, const size_t start[], const size_t count[], const void * valuesp){
     onc_get_vara_t original = dlsym(RTLD_NEXT, "nc_get_vara");
-    
+  
     int res = dvl_nc_get(ncid, varid, start, count, valuesp);
     if (res>=0) return (*original)(res, varid, start, count, valuesp);
     return res;

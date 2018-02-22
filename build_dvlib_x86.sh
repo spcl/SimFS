@@ -4,7 +4,7 @@
 . PATHS.in
 
 mkdir lib logs 2> /dev/null
-NETCDFI="-I $SDAVI_NETCDF_PATH/include/"
+NETCDFI="-g -I $SDAVI_NETCDF_PATH/include/"
 NETCDFL="-L $SDAVI_NETCDF_PATH/lib/"
 
 HDF5_8I="-I $SDAVI_HDF5_1_8_PATH/include/"

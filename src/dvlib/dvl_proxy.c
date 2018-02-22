@@ -40,7 +40,7 @@ char * srv_last_ip=NULL;
 
 int dvl_srv_connect(){
 
-    int res;
+    int res=-1;
     struct sockaddr_in srv_addr;
 
     int port = (dvl.is_simulator) ? DVL_PROXY_SRV_DEFAULT_JOB_PORT : DVL_PROXY_SRV_DEFAULT_APP_PORT;
