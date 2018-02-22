@@ -210,13 +210,6 @@ int main(int argc, char * argv[]){
  
         /* Save the IP/PORT on which we are listening */
         std::string ip = dv->getIpAddress();
-        if (ip=="0.0.0.0"){
-            vector<string> ips;
-            NetworkHelper::getAllIPs(ips);
-            ip = "";
-            for (auto lip : ips){ ip = ip + lip + ","; }       
-        }
-
         std::string port = dv->getClientPort();        
    
         ws.setString(IPKEY(env), ip);

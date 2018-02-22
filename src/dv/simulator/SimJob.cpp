@@ -328,25 +328,27 @@ namespace dv {
 		std::string command = "bash " + jobname_;
 		std::string result;
 		FILE *in;
-		char buffer[kShellBufferSize];
+		//char buffer[kShellBufferSize];
 		in = popen(command.c_str(), "r");
 		if (in == nullptr) {
 			std::cerr << "SEVERE ERROR: could not launch the job using bash" << std::endl;
 			return -1;
 		}
 
-		while (fgets(buffer, sizeof(buffer), in) != nullptr) {
+		/*while (fgets(buffer, sizeof(buffer), in) != nullptr) {
 			std::string next = buffer;
 			result += next;
-		}
+		}*/
 		pclose(in);
 
-		try {
+		/*try {
 			sysjobid_ = std::stol(result);
 		} catch (const std::invalid_argument &ia) {
 			std::cerr << "SEVERE ERROR: could not catch sysjobid from string " << result << std::endl;
 			return -1;
-		}
+		}*/
+       
+        sysjobid_ = jobid_;
 		std::cout << "simulation sysjobid: " << sysjobid_ << std::endl;
 
         start_time_ = toolbox::TimeHelper::now();

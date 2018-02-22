@@ -26,6 +26,7 @@
 #include "../toolbox/StringHelper.h"
 #include "../toolbox/FileSystemHelper.h"
 #include "../toolbox/TimeHelper.h"
+#include "../toolbox/NetworkHelper.h"
 
 
 namespace dv {
@@ -180,8 +181,16 @@ namespace dv {
 		return statusSummary_;
 	}
 
-	const std::string &DV::getIpAddress() const {
-		return ip_address_;
+	const std::string DV::getIpAddress() const {
+        std::string ip = ip_address_;
+        if (ip=="0.0.0.0"){
+            std::vector<std::string> ips;
+            toolbox::NetworkHelper::getAllIPs(ips);
+            ip = "";
+            for (auto lip : ips){ ip = ip + lip + ","; }       
+        }
+
+		return ip;
 	}
 
 	const std::string &DV::getSimPort() const {

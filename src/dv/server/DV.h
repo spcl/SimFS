@@ -46,7 +46,7 @@ namespace dv {
 		FileCache *getFileCachePtr() const;
 		void setFileCachePtr(std::unique_ptr<FileCache> cache_ptr);
 
-		const std::string &getIpAddress() const;
+		const std::string getIpAddress() const;
 
 		const std::string &getSimPort() const;
 
