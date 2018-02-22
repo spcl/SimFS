@@ -226,6 +226,8 @@ namespace dv {
 		parameters_->setString("__UID__", uid_str);
 		parameters_->setString("__JOBID__", job_id_str);
 		parameters_->setString("__ID__", "_" + uid_str + "_" + appid_str + "_" + job_id_str);
+        parameters_->setString("restart_dir", dv_ptr_->getConfigPtr()->sim_checkpoint_path_);
+        parameters_->setString("output_dir", dv_ptr_->getConfigPtr()->sim_result_path_);
 
 		// make file names available for substitution, too
 		std::string par_out_name = dv_ptr_->getConfigPtr()->sim_parameter_output_file_;

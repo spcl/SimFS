@@ -55,6 +55,8 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         dvl.free_files = dvl.free_files->trash_next;
 
         dvl_file_t * dfile = &(dvl.open_files[fileid]);
+        memcpy(dfile->path, path, pathlen + 1);
+
 #ifdef __MT__
         pthread_rwlock_unlock(&dvl.open_files_lock);
         // avoid having the data structure locked over the entire communication time with DV
@@ -75,6 +77,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         MAKE_MESSAGE(buff, msgsize, "%c:%s:%i:file=%s;gni_addr=%u", DVL_MSG_FOPEN, path, dvl.gni.myrank, path, dvl.gni.addr);
 #endif
 
+
         if (msgsize<0) return DVL_ERROR;
         dvl_send_message(buff, msgsize, 0);
     
@@ -82,17 +85,29 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         dvl_recv_message(buff, BUFFER_SIZE, 1);
 
         int res; /* it has to be a valid ncid*/
+        int is_meta=0;
 
         if (buff[0]==DVL_REPLY_FILE_SIM){
             printf("File is not avail. Opening meta: %s\n", buff+1);
             res = (*onc_open)(buff+1, omode, ncidp); 
             if (res!=NC_NOERR){
                 printf("Error opening metadata file\n");
-                DVL_ABORT;
+        
+                /*send fake get message to get the notification */
+                MAKE_MESSAGE(buff, msgsize, "%c:%s:%i:%i:", DVL_MSG_VGET, dfile->path, 0, dvl.gni.myrank);
+                if (msgsize<0) return DVL_ERROR;
+                dvl_send_message(buff, msgsize, 0);
+            
+                /* wait for notification */
+                dvl_recv_message(buff, BUFFER_SIZE, 1);
+            }else{
+                is_meta=1;
+                dfile->state = DVL_FILE_SIM;
+                dfile->meta_toclose = *ncidp; 
             }
-            dfile->state = DVL_FILE_SIM;
-            dfile->meta_toclose = *ncidp; 
-        }else{
+        }
+
+        if (!is_meta){
             res = (*onc_open)(opath, omode, ncidp);
             dfile->state = DVL_FILE_OPEN;
             dfile->meta_toclose = -1;
@@ -101,7 +116,6 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         dfile->ncid = *ncidp;
         dfile->key = *ncidp;
         dfile->omode = omode;
-        memcpy(dfile->path, path, pathlen + 1);
 
 
 #ifdef __MT__
@@ -115,7 +129,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
 #ifdef __MT__
         pthread_rwlock_unlock(&dvl.open_files_lock);
 #endif
-
+       
 
         return res; 
     }else{ /* we don't care about the simulator */

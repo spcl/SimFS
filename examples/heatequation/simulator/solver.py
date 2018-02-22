@@ -60,8 +60,8 @@ class solver:
     def compute_step(self):
         mnew = [[self.f(i, j) for j in range(0, self.NY)] for i in range(0, self.NX)]
         self.grid = [row[:] for row in mnew]
-        self.current_it = self.current_it+1
         self.write_to_disk()
+        self.current_it = self.current_it+1
 
     
 
