@@ -19,16 +19,14 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "SimulatorFileCreateMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+            LOG(ERROR, 0, "Insufficient number of arguments!");
 			return;
 		}
 
 		try {
 			jobid_ = dv::stoid(params[kJobIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in SimulatorFileCreateMessageHandler: could not extract integer jobid from params: "
-					  << params[kJobIdIndex] << std::endl;
+            LOG(ERROR, 0, "Cannot extract jobid: " + params[kJobIdIndex]);
 		}
 
 		filename_ = params[kFilenameIndex];
@@ -64,7 +62,7 @@ namespace dv {
 
 	void SimulatorFileCreateMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			sendAll(kLibReplyFileCreateAck);
 			close(socket_);
 			return;
@@ -73,10 +71,7 @@ namespace dv {
 		// lookup simjob
 		SimJob *simjob = dv_->findSimJob(jobid_);
 		if (simjob == nullptr) {
-			std::cerr << "ERROR in SimulatorFileCreateMessageHandler::serve(): Job " << jobid_
-					  << " not recognized." << std::endl;
-
-
+            LOG(ERROR, 0, "Job not recognized!");
 			sendAll(kLibReplyFileCreateAck);
 			close(socket_);
 			return;
@@ -85,7 +80,7 @@ namespace dv {
 
 		// handle simjob that has received KILL signal
 		if (simjob->hasToBeKilled()){
-			std::cout << "Killing SimJob! " << simjob->getCurrentNr() << " " << simjob->getSimStop() << std::endl;
+            LOG(INFO, 1, "Killing SimJob!");
 
 			//Invalidate the killed job so future lookup calls will return false.
 			simjob->invalidateJob();
@@ -180,32 +175,33 @@ namespace dv {
 			std::string redirectPath = toolbox::FileSystemHelper::getDirname(fullRedirectName);
 
 			if (!toolbox::FileSystemHelper::folderExists(redirectPath)) {
-				std::cout << "creating redirect path " << redirectPath << std::endl;
+                LOG(INFO, 1, "creating redirect path " + redirectPath);
 				std::string command = "mkdir -p " + redirectPath;
 				system(command.c_str());
 
 				if (!toolbox::FileSystemHelper::folderExists(redirectPath)) {
-					std::cout << "WARNING: redirect path " << redirectPath
-							  << " could not be created. Using parent dir as alternate "
-							  << simjob->getRedirectPath_result()
-							  << " (increased risk of name collisions)" << std::endl;
+                    LOG(WARNING, 0, "failed to create redirect path (" + redirectPath + "). Falling back to " + simjob->getRedirectPath_result() + ". This may cause collisions.");
 					redirectPath = simjob->getRedirectPath_result();
 					fullRedirectName = toolbox::StringHelper::joinPath(redirectPath, toolbox::FileSystemHelper::getBasename(filename_));
 				}
 
 			}
 
-			std::cout << "Simulation " << jobid_ << " is creating file " << filename_
+            LOG(SIM_HANDLER, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+			/*
+            std::cout << "Simulation " << jobid_ << " is creating file " << filenam
 					  << " at redirected location " << fullRedirectName
 					  << " to avoid overwriting an existing file" << std::endl;
 			std::cout << "log_create " << filename_ << std::endl;
 			std::cout << "log_redirect " << fullRedirectName << std::endl;
+            */
 			std::string reply(kLibReplyFileCreateRedirect);
 			reply += std::string(kMsgDelimiter) + fullRedirectName;
 			sendAll(reply);
 		} else {
-			std::cout << "Simulation " << jobid_ << " is creating file " << filename_ << std::endl;
-			std::cout << "log_create " << filename_ << std::endl;
+            LOG(SIM_HANDLER, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+			//std::cout << "Simulation " << jobid_ << " is creating file " << filename_ << std::endl;
+			//std::cout << "log_create " << filename_ << std::endl;
 			sendAll(kLibReplyFileCreateAck);
 		}
 		close(socket_);

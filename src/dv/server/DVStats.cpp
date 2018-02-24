@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include "DVStats.h"
+#include "../toolbox/Logger.h"
 
 namespace dv {
 
@@ -41,7 +42,7 @@ namespace dv {
 	}
 
 	void DVStats::incEvictions(std::string fileName) {
-        std::cout << "log_evict " << fileName << std::endl;
+        LOG(CACHE, 0, "Evicting " + fileName);
 		++evictions_;
 	}
 

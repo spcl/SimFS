@@ -45,3 +45,11 @@ set(CHECK_DV_CONFIG_FILE check_dv_config_file.cpp server/DVConfig.cpp server/DVC
 add_executable(check_dv_config_file ${CHECK_DV_CONFIG_FILE})
 target_link_libraries(check_dv_config_file lua)
 target_link_libraries(check_dv_config_file dl)
+
+
+set(SIMFS_WORKSPACE ${SIMFS_WORKSPACE_PATH})
+set(SIMFS_INSTALL_PATH ${SIMFS_INSTALL_PATH})
+set(SIMFS_DVLIB ${SIMFS_DVLIB_PATH})
+
+configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/config.h)
+include_directories(${PROJECT_BINARY_DIR})

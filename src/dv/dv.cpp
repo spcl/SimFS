@@ -59,7 +59,7 @@ DV * DVCreate(gengetopt_args_info &args_info, const string &config_file){
 	unique_ptr<DVConfig> dv_config = make_unique<DVConfig>();
 
 	//--- DV config: direct settings -------------------------------------------
-	dv_config->dv_debug_output_on_ = true;
+	dv_config->dv_debug_output_on_ = false;
 	dv_config->filecache_debug_output_on_ = false;
 	dv_config->filecache_details_debug_output_on_ = false;
 
@@ -69,12 +69,12 @@ DV * DVCreate(gengetopt_args_info &args_info, const string &config_file){
 	//--- DV config: config file ------------------------------------------------
 
 	if (!dv_config->loadConfigFile(config_file)) {
-        LOG(ERROR, "Could not read the config file " + config_file + ".");
+        LOG(ERROR, 0, "Could not read the config file " + config_file + ".");
         return NULL;
 	}
 
 	if (!dv_config->init()) {
-        LOG(ERROR, "Config file init(): did not pass.");
+        LOG(ERROR, 0, "Config file init(): did not pass.");
         return NULL;
 	}
 
@@ -175,7 +175,7 @@ DV * DVCreate(gengetopt_args_info &args_info, const string &config_file){
 	//--- final config check & create DV ---------------------------------------
 
 	if(!dv_config->assure_config_ok()) {
-		LOG(ERROR, "Configuration is not complete. Cannot create DV.");
+		LOG(ERROR, 0, "Configuration is not complete. Cannot create DV.");
         return NULL;
 	}
 
@@ -219,7 +219,7 @@ DV * DVCreate(gengetopt_args_info &args_info, const string &config_file){
 			embedded_cache = std::make_unique<FileCacheDCL>(dv, embedded_cache_size, cache_protected_mrus);
 			break;
 		case FileCache::kACL:
-			LOG(ERROR, "Cache type ACL not yet implemented");
+			LOG(ERROR, 0, "Cache type ACL not yet implemented");
             return NULL;
 			break;
 		case FileCache::kPLRU:
@@ -231,11 +231,11 @@ DV * DVCreate(gengetopt_args_info &args_info, const string &config_file){
 			embedded_cache = std::make_unique<FileCachePDCL>(dv, embedded_cache_size, cache_protected_mrus, penalty_factor);
 			break;
 		case FileCache::kPACL:
-			LOG(ERROR, "Cache type PACL not yet implemented");
+			LOG(ERROR, 0, "Cache type PACL not yet implemented");
             return NULL;
 			break;
 		default:
-			LOG(ERROR, "Cache type " + dv->getConfigPtr()->filecache_type_ + " unknown.");
+			LOG(ERROR, 0, "Cache type " + dv->getConfigPtr()->filecache_type_ + " unknown.");
             return NULL;
 
 	}

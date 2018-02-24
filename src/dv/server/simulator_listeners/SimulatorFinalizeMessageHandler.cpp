@@ -15,16 +15,14 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "SimulatorFileCloseMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+            LOG(ERROR, 0, "insufficient number of arguments in params!");
 			return;
 		}
 
 		try {
 			jobid_ = dv::stoid(params[kJobIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in SimulatorFileCloseMessageHandler: could not extract integer jobid from params: "
-					  << params[kJobIdIndex] << std::endl;
+            LOG(ERROR, 0, "cannot extract integer jobid: " + params[kJobIdIndex]);
 		}
 
 		initialized_ = true;
@@ -33,18 +31,17 @@ namespace dv {
 
 	void SimulatorFinalizeMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			close(socket_);
 			return;
 		}
 
-		std::cout << "Simulation " << jobid_ << " is terminating" << std::endl;
+        LOG(SIM_HANDLER, 0, "Simulation " + std::to_string(jobid_) + " is terminating");
 
 		// lookup simulation
 		SimJob *simjob = dv_->findSimJob(jobid_);
 		if (simjob == nullptr) {
-			std::cerr << "ERROR in SimulatorFinalizeMessageHandler::serve(): Job " << jobid_
-					  << " not recognized." << std::endl;
+            LOG(ERROR, 0, "Job not recognized!");
 			close(socket_);
 			return;
 		}

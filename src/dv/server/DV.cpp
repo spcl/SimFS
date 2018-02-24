@@ -98,25 +98,19 @@ namespace dv {
 						ssize_t len = recv(socket, bufptr, buflen - 1, 0); // to assure having always a 0 at the end
 						// note: len == 0 just indicates a closed socket from client
 						if (0 < len) {
-							if (config_->dv_debug_output_on_) {
-								std::cout << "Server: got message on simulator server socket " << sim_socket_ << ": " << bufptr << std::endl;
-							}
+
+                            LOG(INFO, 1, "Server: got message (%s)!" + std::string(bufptr))
 
 							std::vector<std::string> params;
 							toolbox::StringHelper::splitCStr(&params, bufptr, delimiter);
 
-							//MessageHandler *h = MessageHandlerFactory::createMessageHandler(this, socket, MessageHandlerFactory::kSimulator, params);
-							//h->serve();
-							//delete h;
 							++message_count_;
 							MessageHandlerFactory::runMessageHandler2(this, socket, MessageHandlerFactory::kSimulator, params);
 						} else {
-							if (config_->dv_debug_output_on_) {
-								std::cout << "Server: got message on simulator socket of length " << len << ": server socket closed by simulator" << std::endl;
-							}
+                            LOG(INFO, 1, "Socket closed by simulator.");
 						}
 					} else {
-						std::cerr << "Server: accept: simulator socket: error " << errno << std::endl;
+                        LOG(ERROR, 0, "Server: accept error: " + std::to_string(errno));
 					}
 				}
 

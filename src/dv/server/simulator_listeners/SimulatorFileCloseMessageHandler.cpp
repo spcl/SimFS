@@ -20,16 +20,14 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "SimulatorFileCloseMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+            LOG(ERROR, 0, "Insufficient number of arguments in params. (Expected: " + std::to_string(kNeededVectorSize) + "; Got: " + std::to_string(params.size()) + ")");
 			return;
 		}
 
 		try {
 			jobid_ = dv::stoid(params[kJobIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in SimulatorFileCloseMessageHandler: could not extract integer jobid from params: "
-					  << params[kJobIdIndex] << std::endl;
+            LOG(ERROR, 0, "Cannot extract jobid from params: " + params[kJobIdIndex]);
 		}
 
 		filename_ = params[kFilenameIndex];
@@ -37,8 +35,7 @@ namespace dv {
 		try {
 			filesize_ = dv::stoid(params[kFilesizeIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in SimulatorFileCloseMessageHandler: could not extract integer filesize from params: "
-					  << params[kFilesizeIndex] << std::endl;
+            LOG(ERROR, 0, "Cannot extract filesize from params: " + params[kFilesizeIndex]);
 		}
 
 		initialized_ = true;
@@ -47,20 +44,17 @@ namespace dv {
 
 	void SimulatorFileCloseMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "cannot serve message due to incomplete initialization");
 			close(socket_);
 			return;
 		}
 
-		std::cout << "Simulator is closing " << filename_
-				  << " (file size " << filesize_
-				  << " bytes); jobid " << jobid_ << std::endl;
+        LOG(SIM_HANDLER, 0, "Simulator is closing " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
 
 		// lookup simulation
 		SimJob *simjob = dv_->findSimJob(jobid_);
 		if (simjob == nullptr) {
-			std::cerr << "ERROR in SimulatorFileCloseMessageHandler::serve(): Job " << jobid_
-					  << " not recognized." << std::endl;
+            LOG(ERROR, 0, "Job not recognized! (" + std::to_string(jobid_) + ")");
 			close(socket_);
 			return;
 		}
@@ -70,7 +64,7 @@ namespace dv {
 		dv::id_type t = dv_->getSimulatorPtr()->getResultFileType(filename_);
 		if (t == 0) {
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-				std::cout << "   ignore this file type" << std::endl;
+                LOG(SIM_HANDLER, 0, "   unexpected file type: ignore.");
 			}
 			close(socket_);
 			return;
@@ -82,7 +76,7 @@ namespace dv {
 		dv::id_type nr = dv_->getSimulatorPtr()->result2nr(filename_, t);
 		if(!simjob->nrIsInSimulationRange(nr)) {
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-				std::cout << "   file was not asked for: ignore" << std::endl;
+                LOG(SIM_HANDLER, 0, "   file was not expected: ignore");
 			}
 
 			// but handle simulator lock count
@@ -113,8 +107,7 @@ namespace dv {
 			// get actual pointer from stored descriptor in cache
 			fileDescriptor = dv_->getFileCachePtr()->internal_lookup_get(filename_);
 			if (fileDescriptor == nullptr) {
-				std::cerr << "ERROR in SimulatorFileCloseMessageHandler::serve() while adding " << filename_
-						  << " to cache." << std::endl;
+                LOG(ERROR, 0, "Error in adding " + filename_ + " to cache");
 				dv_->getFileCachePtr()->printStatus(&std::cerr);
 				close(socket_);
 				return;
@@ -131,25 +124,24 @@ namespace dv {
 			// (transfer of descriptor from internal waiting list to actual cache)
 			fileDescriptor = dv_->getFileCachePtr()->internal_lookup_get(filename_);
 			if (fileDescriptor == nullptr) {
-				std::cerr << "ERROR in SimulatorFileCloseMessageHandler::serve() while refreshing " << filename_
-						  << " in cache." << std::endl;
+                LOG(ERROR, 0, "Error in refreshing " + filename_ + " in cache");
 				dv_->getFileCachePtr()->printStatus(&std::cerr);
 				close(socket_);
 				return;
 			}
 		}
 
-		std::cout << "log_sim_close " << filename_ << std::endl;
+		//std::cout << "log_sim_close " << filename_ << std::endl;
 
 		// given asserts here:
 		// - fileDescriptor != nullptr &&
 		// - file descriptor up to date, incl. fileAvailable and is at MRU position &&
 		// - fileDescriptor pointing to proper FileDescriptor object
 
-		std::cout << "   Job recognized. Handling fopen in simulations." << std::endl;
+		//std::cout << "   Job recognized. Handling fopen in simulations." << std::endl;
 		simjob->handleSimulatorFileClose(filename_, fileDescriptor);
 
-        printf("filedescriptor: %p\n", fileDescriptor);
+        //printf("filedescriptor: %p\n", fileDescriptor);
 
 		// notifications
 		// 1) update clientDescriptors (-> prepare for next requests)
@@ -174,8 +166,9 @@ namespace dv {
 
 		fileDescriptor->removeAllNotificationSockets();
 
-		std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
-				  << client_notification_count << " clients." << std::endl;
+        LOG(SIM_HANDLER, 1, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+		//std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
+		//		  << client_notification_count << " clients." << std::endl;
 
 		close(socket_);
 	}

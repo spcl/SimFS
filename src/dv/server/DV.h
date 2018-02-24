@@ -21,6 +21,7 @@
 #include "../simulator/Simulator.h"
 #include "../simulator/SimJob.h"
 
+#include "../toolbox/Logger.h"
 
 namespace dv {
 

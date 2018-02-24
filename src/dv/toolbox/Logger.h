@@ -3,10 +3,17 @@
 
 #include <string>
 
-#define LOG(key, message) { toolbox::Logger::log(key, message, __FILE__, __LINE__); }
+#define LOG(key, level, message) { toolbox::Logger::log(key, level, message, __FILE__, __LINE__); }
 
-#define ERROR "error"
-#define INFO "info"
+#define ERROR 0
+#define INFO 1
+#define SIM_HANDLER 2
+#define CLI_HANDLER 3
+#define CACHE 4
+#define WARNING 5
+
+#define KEYNAMES "ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "WARNING"
+
 
 namespace toolbox{
 
@@ -14,14 +21,16 @@ namespace toolbox{
 
     public:
         static std::string tolog_;
+        static const char * log_key_names_[];
+        static int level_;        
 
     public:
-        static void setLogKeys(const std::string &tolog);
-        static int log(const std::string &key, const std::string &msg, const std::string &file, int line);
+        static void setLogKeys(const std::string &tolog, int level);
+        static int log(int key, int level, const std::string &msg, const std::string &file, int line);
     
     private:
-        static bool toLog(const std::string &key);
-    
+        static bool toLog(int key);
+
     };
 }
 

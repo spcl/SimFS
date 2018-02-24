@@ -25,11 +25,13 @@ simstep=20
 #animation flag
 animating=False
 
+stopped=True
 
 #User interaction
 def key_press_handler(event):
     global direction
     global animating
+    global stopped
     already_animating = animating
     print('press', event.key)
     if (event.key=='right'):
@@ -41,7 +43,7 @@ def key_press_handler(event):
     elif (event.key==' '):
         animating=not animating
 
-    if (not already_animating): update()
+    if (not already_animating and stopped): update()
     
 
 
@@ -65,6 +67,7 @@ def update():
     global simstep
     global direction
     global animating
+    global stopped
 
     #i = i + (direction)*simstep - (1-direction)*simstep 
     i = i + 2*simstep*direction - simstep
@@ -111,8 +114,10 @@ def update():
     plt.draw()
 
     #keep animating if animating==true
-    if (animating): Timer(0.01, update).start()
-
+    if (animating): 
+        Timer(0.01, update).start()
+        stopped=False
+    else: stopped=True
     #now this is useless
     return (xx, yy, data)
 

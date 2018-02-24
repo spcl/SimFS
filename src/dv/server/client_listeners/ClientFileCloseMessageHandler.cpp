@@ -18,8 +18,7 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "ClientFileCloseMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+			LOG(ERROR, 0, "Insufficient number of arguments in params!");
 			return;
 		}
 
@@ -29,25 +28,23 @@ namespace dv {
 
 	void ClientFileCloseMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			close(socket_);
 			return;
 		}
 
-		std::cout << "Client is closing " << filename_ << std::endl;
+        LOG(CLI_HANDLER, 0, "Client is closing " + filename_);
 
 		// only internal lookup is needed -> thus, no refresh later
 		// note: there is no point in making a file a fresh MRU while handling its close message
 		FileDescriptor *descriptor = dv_->getFileCachePtr()->internal_lookup_get(filename_);
 		if (descriptor == nullptr) {
-			std::cerr << "Error: ClientFileCloseMessageHandler: trying to unlock non-existing file " << filename_
-					  << std::endl;
+            LOG(ERROR, 0, "Trying to unlock a non-exisiting file: " + filename_);
 			dv_->getFileCachePtr()->printStatus(&std::cerr);
 			close(socket_);
 			return;
 		}
 
-		std::cout << "log_client_close " << filename_ << std::endl;
 
 		descriptor->unlock();
 		if (dv_->getConfigPtr()->dv_debug_output_on_) {

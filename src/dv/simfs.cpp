@@ -5,6 +5,9 @@
 #include "getopt/dv_cmdline.h"
 #include "dv.h"
 
+#include "config.h"
+
+
 #include "server/DV.h"
 
 #include <sys/types.h>
@@ -14,8 +17,9 @@
 
 #define DIR_SIMFS ".simfs"
 
-#define SIMFS_WORKSPACE "/home/salvo/simfs"
-#define SIMFS_DVLIB "/home/salvo/ETH/SimFS/lib/libdvl.so"
+//#define SIMFS_INSTALL_PATH "/home/salvo/ETH/SimFS/"
+//#define SIMFS_WORKSPACE SIMFS_INSTALL_PATH"/simfs"
+//#define SIMFS_DVLIB SIMFS_INSTALL_PATH"/lib/libdvl.so"
 
 #define SIMFS_WSNAME "workspace"
 
@@ -30,6 +34,8 @@
 #define SIMFS_INDEX "index"
 #define SIMFS_RUN "run"
 
+
+#define DEFAULT_DVLIB "libdvl.so"
 
 using namespace dv;
 using namespace toolbox;
@@ -49,18 +55,18 @@ namespace simfs {
         }
 
         if (current_path=="/"){
-            LOG(ERROR, "This is not a SimFS envirorment!");
+            LOG(ERROR, 0, "This is not a SimFS envirorment!");
             return "";
         }
                
         string conf_file = current_path + "/" + DIR_SIMFS + "/" + CONF_NAME;
         
         if (!FileSystemHelper::fileExists(conf_file)) {
-            LOG(ERROR, "SimFS configuration file not found!");
+            LOG(ERROR, 0, "SimFS configuration file not found!");
             return "";
         }
         
-        LOG(INFO, "Configuration file found in: " + conf_file);
+        LOG(INFO, 0, "Configuration file found in: " + conf_file);
 
         return conf_file;
     }
@@ -89,8 +95,11 @@ namespace simfs {
     int initEnvirorment(KeyValueStore &ws, std::string name, std::string conf_file){
 
         /* create local folder */
-        if (toolbox::FileSystemHelper::mkDir(".simfs")) {
-            printf("Failed to initialize simfs dir!\n");
+        if (toolbox::FileSystemHelper::folderExists(".simfs")) {
+            LOG(INFO, 0, "SimFS is already initialized here: overwriting!");
+        }
+        else if (toolbox::FileSystemHelper::mkDir(".simfs")) {
+            LOG(ERROR, 0, "Failed to initialize SimFS!\n");
             return -1;
         }
 
@@ -111,7 +120,7 @@ void error_exit(const std::string &name, const std::string &additional_text) {
 	std::cout << "Usage: " << name << " <command> [OPTIONS]" << std::endl;
 	std::cout << "\t" << name << " help for list of OPTIONS" << std::endl;
 	std::cout << std::endl;
-    LOG(ERROR, additional_text);
+    LOG(ERROR, 0, additional_text);
 	exit(1);
 }
 
@@ -129,11 +138,16 @@ int main(int argc, char * argv[]){
     /* Load SimFS workspace */
     KeyValueStore ws;
     if (!simfs::loadWorkspace(ws)){
-        LOG(ERROR, "Failed the load SimFS configuration!");
+        LOG(ERROR, 0, "Failed the load SimFS configuration!");
         exit(-1);
     }
 
+    /* Init logger */
+    char * log_keys = getenv("SIMFS_LOG");
+    char * log_level_str = getenv("SIMFS_LOG_LEVEL");
 
+    if (log_keys!=NULL) Logger::setLogKeys(log_keys, log_level_str==NULL? 0 : atoi(log_level_str));
+    
 
     /* Parsing & checking arguments */
 	if (argc < 2) {
@@ -147,7 +161,6 @@ int main(int argc, char * argv[]){
     /* Executing commands*/
     if (cmd == SIMFS_INIT){
 
-        printf("init!\n");
         if (argc!=4) {
             error_exit(argv[0], "Invalid syntax. See usage.");
         }
@@ -166,9 +179,12 @@ int main(int argc, char * argv[]){
         if (!ws.hasKey(env)){ error_exit(argv[0], "This environment does not exit!"); }
         std::string conf_file = ws.getString(env) + CONF_NAME;
 
+        const char * libname = getenv("SIMFS_DVLIB");
+        if (libname==NULL) libname = DEFAULT_DVLIB;
+
         printf("SimFS envirorment: %s\n", env.c_str());
 
-        setenv("LD_PRELOAD", SIMFS_DVLIB, 1);
+        setenv("LD_PRELOAD", (SIMFS_DVLIB + string(libname)).c_str(), 1);
 
         /* Check if there is a known IP/PORT for it */
         if (ws.hasKey(IPKEY(env)) && ws.hasKey(PORTKEY(env))){

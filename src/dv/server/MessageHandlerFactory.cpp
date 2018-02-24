@@ -138,7 +138,7 @@ namespace dv {
 		}
 
 		// separator
-		std::cout << "----------" << std::endl << std::endl;
+		//std::cout << "----------" << std::endl << std::endl;
 	}
 
 
@@ -174,7 +174,7 @@ namespace dv {
 		}
 
 		// separator
-		std::cout << "----------" << std::endl << std::endl;
+		//std::cout << "----------" << std::endl << std::endl;
 	}
 
 }

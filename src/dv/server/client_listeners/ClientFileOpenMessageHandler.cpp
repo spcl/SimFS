@@ -52,9 +52,7 @@ namespace dv {
 			close(socket_);
 			return;
 		}
-
-		std::cout << "Client " << appid_ << " is opening " << filename_ << std::endl;
-        std::cout << "log_open " << filename_ << std::endl;
+        LOG(CLI_HANDLER, 0, "Client " + std::to_string(appid_) + " is opening " + filename_);
 		dv_->getStatsPtr()->incTotal();
 
 		// client open: we need the full get from the cache to trigger all actions in case of cache miss

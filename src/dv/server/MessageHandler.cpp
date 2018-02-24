@@ -33,13 +33,13 @@ namespace dv {
 		// see parsing of params in the individual message handlers
 		// due to different message formats
 
-		if (dv_->getConfigPtr()->dv_debug_output_on_) {
+		/*if (dv_->getConfigPtr()->dv_debug_output_on_) {
 			std::cout << "Messagehandler: socket " << socket << ", " << params.size() << " params: ";
 			for (const auto &p : params) {
 				std::cout << p << "; ";
 			}
 			std::cout << std::endl;
-		}
+		}*/
 	}
 
 	void MessageHandler::serve() {

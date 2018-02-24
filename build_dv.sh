@@ -4,9 +4,13 @@ current_path=$(pwd)
 code_source_path=$current_path/src/dv
 target_path=$current_path/bin
 build_path=$current_path/build
+workspace_path=$current_path/workspace
+dvlib_path=$current_path/lib/
 
 mkdir -p $target_path
 mkdir -p $build_path
+mkdir -p $workspace_path
+
 
 if [ -z "$LUA_PATH" ]; then
     LUA_PATH=$current_path/lua
@@ -18,11 +22,12 @@ export LUA_INCLUDE_PATH=$LUA_PATH/include
 
 echo "Compiling SimFS ($code_source_path -> $build_path)"
 cd $build_path
-cmake $code_source_path
+cmake -DSIMFS_INSTALL_PATH=$target_path -DSIMFS_WORKSPACE_PATH=$workspace_path -DSIMFS_DVLIB_PATH=$dvlib_path $code_source_path
 make -j 8 simfs
 #make -j 8 stop_dv
 #make -j 8 dv_status
 make -j 8 check_dv_config_file
+
 
 cd $current_path
 #
