@@ -115,7 +115,7 @@ def update():
 
     #keep animating if animating==true
     if (animating): 
-        Timer(0.01, update).start()
+        Timer(0.001, update).start()
         stopped=False
     else: stopped=True
     #now this is useless

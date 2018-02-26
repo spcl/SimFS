@@ -24,7 +24,7 @@ void Profiler::addAlpha(double alpha) {
     alphas_.push_back(alpha);
     last_time_ = toolbox::TimeHelper::now();
     MOVING_AVG(moving_alpha_, alpha);
-    //printf("PROFILER: adding alpha: %lf; new alpha: %lf\n", alpha, moving_alpha_);
+    printf("PROFILER: adding alpha: %lf; new alpha: %lf\n", alpha, moving_alpha_);
 }
 
 double Profiler::getAlpha() const {

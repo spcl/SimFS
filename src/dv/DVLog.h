@@ -10,5 +10,7 @@
 #define WARNING 5
 #define PREFETCHER 6
 
+/* Note: keep the same ordering of the above MACROs!! */
+#define KEYNAMES "ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "WARNING", "PREFETCHER"
 
 

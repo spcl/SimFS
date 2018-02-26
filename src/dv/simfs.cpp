@@ -130,7 +130,7 @@ void error_exit(const std::string &name, const std::string &additional_text) {
 void initLogger() {
 
     /* Note: this order has to reflect the macro numbering! (see below)*/
-    const char * keynames[] = {"ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "PREFETCHER", "WARNING", NULL};
+    const char * keynames[] = {KEYNAMES, NULL};
 
     char * log_keys = getenv("SIMFS_LOG");
     char * log_level_str = getenv("SIMFS_LOG_LEVEL");
@@ -142,8 +142,8 @@ void initLogger() {
     Logger::setLogKey(SIMULATOR, -1, keynames[2], LOG_SIMPLE, ANSI_COLOR_BLUE);
     Logger::setLogKey(CLIENT, -1, keynames[3], LOG_SIMPLE, ANSI_COLOR_GREEN);
     Logger::setLogKey(CACHE, -1, keynames[4], LOG_SIMPLE, ANSI_COLOR_YELLOW);
-    Logger::setLogKey(PREFETCHER, -1, keynames[5], LOG_SIMPLE, ANSI_COLOR_MAGENTA);
-    Logger::setLogKey(WARNING, -1, keynames[6], LOG_SIMPLE, ANSI_COLOR_YELLOW);
+    Logger::setLogKey(WARNING, -1, keynames[5], LOG_SIMPLE, ANSI_COLOR_YELLOW);
+    Logger::setLogKey(PREFETCHER, -1, keynames[6], LOG_SIMPLE, ANSI_COLOR_MAGENTA);
 
     if (log_keys!=NULL) {
         std::string keys_str = std::string(log_keys);

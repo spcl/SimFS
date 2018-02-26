@@ -8,11 +8,17 @@
 #include "PrefetchContext.h"
 #include "DV.h"
 #include "ClientDescriptor.h"
+#include "../DVLog.h"
 
 #define MAX(a, b) ((a>b) ? a : b)
 #define MIN(a, b) ((a<b) ? a : b)
 
 namespace dv {
+
+dv::id_type PrefetchContext::getStride(){
+    if (state_!=STEADY) return 0;
+    return stride_;
+}
 
 PrefetchContext::PrefetchContext(ClientDescriptor * client, dv::id_type appid) :
     client_(client), appid_(appid) {
@@ -20,14 +26,29 @@ PrefetchContext::PrefetchContext(ClientDescriptor * client, dv::id_type appid) :
 }
 
 
-void PrefetchContext::checkForPrefetch(const std::string &filename) {
+void PrefetchContext::handleMiss(const std::string &filename){
+    parsims_ = 1;
+    check_for_prefetch(filename);
+}
+
+
+void PrefetchContext::handleHit(const std::string &filename){
+    check_for_prefetch(filename);
+}
+
+void PrefetchContext::check_for_prefetch(const std::string &filename) {
 
     dv::id_type nr = dv_->getSimulatorPtr()->result2nr(filename);
 
-    printf("PrefetchContext state: %i\n", state_);
 
     dv::id_type newstride = nr - last_access_;
     last_access_ = nr;
+
+
+    LOG(PREFETCHER, 0, "State: " + std::to_string(state_) + \
+        " (current stride: " + std::to_string(stride_) + \
+        " new stride: " + std::to_string(newstride) + ")");
+
 
 
     if (state_==DISABLED) {
@@ -42,8 +63,8 @@ void PrefetchContext::checkForPrefetch(const std::string &filename) {
 
         if (stride_ != newstride) {
             reset();
-            printf("PrefetchContext: invalidating! new stride: %li; expected: %li\n", \
-                   newstride, stride_);
+            LOG(PREFETCHER, 0, "Invalidating! New stride: " + std::to_string(newstride) + \
+                "; expected: " + std::to_string(stride_));
             return;
         }
 
@@ -67,16 +88,23 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
     double mytau = client_->cli_profiler_.getTau();
 
 
-    if (last_nr_ == -1) {
+    if (last_nr_ == -1 || nr > last_nr_) {
         /* if we don't have a last_nr, then the simulation was not prefetched,
            and it will be running until the next restart; */
         last_nr_ = dv_->getSimulatorPtr()->getNextCheckpointNr(nr);
     }
 
-    dv::id_type critical_step = (last_nr_ / stride_ - (simalpha / MAX(simtau/parsims_, mytau)))*stride_;
+    dv::id_type critical_step = \
+        (last_nr_ / stride_ - (simalpha / MAX(simtau/parsims_, mytau)))*stride_;
 
-    printf("PrefetchContext: simalpha: %lf; simtau: %lf; mytau: %lf; critical_step: %li; last_nr: %li; nr: %li; stride: %li\n", \
-           simalpha, simtau, mytau, critical_step, last_nr_, nr, stride_);
+
+    LOG(PREFETCHER, 0, "sim.alpha: " + std::to_string(simalpha) + \
+        "; sim.tau: " + std::to_string(simtau) + \
+        "; client.tau: " + std::to_string(mytau));
+    LOG(PREFETCHER, 0, "critical_step: " + std::to_string(critical_step) + \
+        "; last_nr: " + std::to_string(last_nr_) + \
+        "; nr: " + std::to_string(nr) + \
+        "; stride: " + std::to_string(stride_));
 
 
     if (nr > critical_step) {
@@ -84,7 +112,12 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
 
         int simlen = ceil(simalpha / MAX(simtau, mytau))*stride_;
         for (int i=0; i<parsims_; i++) {
-            printf("PrefetchContext (FW): new simulation: %li -> %li (%li)\n", last_nr_, last_nr_ + simlen, dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_ + simlen));
+            LOG(PREFETCHER, 0, "New simulation! " + \
+                std::to_string(last_nr_) + " -> " + std::to_string(last_nr_ + simlen) + "; " + \
+                "simlen: " + std::to_string(simlen) + "; " + \
+                "nextcheckpoint: " + \
+                std::to_string(dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_ + simlen)));
+
             client_->newSimulation(last_nr_, last_nr_ + simlen, "");
             last_nr_ = dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_ + simlen);
         }

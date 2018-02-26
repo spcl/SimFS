@@ -71,18 +71,27 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     dv::id_type target_nr = dv_->getSimulatorPtr()->result2nr(filename);
 
     if (is_miss) {
-        //invalidate the prefetch
-        prefetcher_.reset();
+        prefetcher_.handleMiss(filename);
 
         //logs & stats
         dv_->getStatsPtr()->incMisses();
         LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
-        newSimulation(target_nr, target_nr, parameters[0]);
+    
+        /* extend the simulation interval according to the prefetcher:
+        *  MISSING - EXTEND_LEFT -> MISSING + EXTEND_RIGHT
+        *  At most one of the two extend_* is !=0:
+        *   FW trajectory: extend_left; BW trajectory: extend_right;
+        */
+        dv::id_type stride = prefetcher_.getStride();
+        dv::id_type extend_left = stride<0 ? -stride : 0;
+        dv::id_type extend_right = stride>0 ? stride : 0;
+
+        newSimulation(target_nr - extend_left, target_nr + extend_right, parameters[0]);
 
         return false;
 
     } else {
-        prefetcher_.checkForPrefetch(filename);
+        prefetcher_.handleHit(filename);
 
         if (is_being_simulated) {
             /* there is a simulation that will produce this file */
@@ -154,7 +163,8 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
         // Note: this is needed especially in the bw direction, where
         // you don't get notifications for the files produced before
         // the one you requested.
-        sim_profiler_.clearTaus();
+        //TODO: taus should be selected according to the stride!!
+        //sim_profiler_.clearTaus();
         sim_profiler_.extendTaus(simjob->getTaus());
 
     } else {
@@ -164,7 +174,7 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
 
     cli_profiler_.reset();
     notified_ = true;
-    LOG(PREFETCHER, 0, "Client notified: Sim profile: " + sim_profiler_.toString());
+    LOG(CLIENT, 0, "Client notified: Sim profile: " + sim_profiler_.toString());
 }
 
 
