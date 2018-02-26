@@ -36,12 +36,12 @@ namespace dv {
 			return;
 		}
 
-        LOG(SIM_HANDLER, 0, "Simulation " + std::to_string(jobid_) + " is terminating");
+        LOG(SIMULATOR, 0, "Simulation " + std::to_string(jobid_) + " is terminating");
 
 		// lookup simulation
 		SimJob *simjob = dv_->findSimJob(jobid_);
 		if (simjob == nullptr) {
-            LOG(ERROR, 0, "Job not recognized!");
+            LOG(ERROR, 0, "Job not recognized! (" + std::to_string(jobid_) + ")");
 			close(socket_);
 			return;
 		}

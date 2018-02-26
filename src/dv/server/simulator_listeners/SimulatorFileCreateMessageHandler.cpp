@@ -71,7 +71,7 @@ namespace dv {
 		// lookup simjob
 		SimJob *simjob = dv_->findSimJob(jobid_);
 		if (simjob == nullptr) {
-            LOG(ERROR, 0, "Job not recognized!");
+            LOG(ERROR, 0, "Job not recognized! (" + std::to_string(jobid_) + ")");
 			sendAll(kLibReplyFileCreateAck);
 			close(socket_);
 			return;
@@ -187,7 +187,7 @@ namespace dv {
 
 			}
 
-            LOG(SIM_HANDLER, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+            LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
 			/*
             std::cout << "Simulation " << jobid_ << " is creating file " << filenam
 					  << " at redirected location " << fullRedirectName
@@ -199,7 +199,7 @@ namespace dv {
 			reply += std::string(kMsgDelimiter) + fullRedirectName;
 			sendAll(reply);
 		} else {
-            LOG(SIM_HANDLER, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+            LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
 			//std::cout << "Simulation " << jobid_ << " is creating file " << filename_ << std::endl;
 			//std::cout << "log_create " << filename_ << std::endl;
 			sendAll(kLibReplyFileCreateAck);

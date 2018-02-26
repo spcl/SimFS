@@ -22,14 +22,13 @@ namespace dv {
 	class JobQueue {
 	public:
 		JobQueue(int32_t max_simjobs = 0) : max_simjobs_(max_simjobs) {}
-
 		void setMaxSimJobs(int32_t max_simjobs);
-
 		void enqueue(SimJob *simjob_ptr);
-
 		void handleJobTermination();
-
 		const std::deque<SimJob *> &queue() const;
+        
+    private:
+        void logState(const char * msg);
 
 	private:
 		int32_t max_simjobs_;

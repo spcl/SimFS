@@ -34,15 +34,17 @@ namespace toolbox{
         if (toLog(key) && level<=level_){
             if (key==INFO || key==WARNING){ color_start = ANSI_COLOR_YELLOW; }
             else if (key==ERROR) { color_start = ANSI_COLOR_RED; }        
-            else if (key==CLI_HANDLER) { color_start = ANSI_COLOR_MAGENTA; }
-            else if (key==SIM_HANDLER) { color_start = ANSI_COLOR_BLUE; }   
-            else if (key==CACHE) { color_start = ANSI_COLOR_CYAN; }
+            else if (key==CLIENT) { color_start = ANSI_COLOR_GREEN; }
+            else if (key==SIMULATOR) { color_start = ANSI_COLOR_BLUE; }   
+            else if (key==CACHE) { color_start = ANSI_COLOR_YELLOW; }
+            else if (key==PREFETCHER) { color_start = ANSI_COLOR_MAGENTA; }
 
-#ifdef DEBUG
-            printf("%s%s:%d: %s%s\n", color_start, FileSystemHelper::getBasename(file).c_str(), line, msg.c_str(), ANSI_COLOR_RESET);
-#else
-            printf("%s%s: %s%s\n", color_start, log_key_names_[key], msg.c_str(), ANSI_COLOR_RESET);
-#endif
+            if (key==ERROR){
+                printf("%sERROR (%s:%d): %s%s\n", color_start, FileSystemHelper::getBasename(file).c_str(), line, msg.c_str(), ANSI_COLOR_RESET);
+            }else{
+                printf("%s%s: %s%s\n", color_start, log_key_names_[key], msg.c_str(), ANSI_COLOR_RESET);
+            }
+
             return 0;
         }
         return 1;

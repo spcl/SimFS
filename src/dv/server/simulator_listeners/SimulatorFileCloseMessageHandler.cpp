@@ -49,7 +49,7 @@ namespace dv {
 			return;
 		}
 
-        LOG(SIM_HANDLER, 0, "Simulator is closing " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
+        LOG(SIMULATOR, 0, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
 
 		// lookup simulation
 		SimJob *simjob = dv_->findSimJob(jobid_);
@@ -64,7 +64,7 @@ namespace dv {
 		dv::id_type t = dv_->getSimulatorPtr()->getResultFileType(filename_);
 		if (t == 0) {
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-                LOG(SIM_HANDLER, 0, "   unexpected file type: ignore.");
+                LOG(SIMULATOR, 0, "   unexpected file type: ignore.");
 			}
 			close(socket_);
 			return;
@@ -76,7 +76,7 @@ namespace dv {
 		dv::id_type nr = dv_->getSimulatorPtr()->result2nr(filename_, t);
 		if(!simjob->nrIsInSimulationRange(nr)) {
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-                LOG(SIM_HANDLER, 0, "   file was not expected: ignore");
+                LOG(SIMULATOR, 0, "   file was not expected: ignore");
 			}
 
 			// but handle simulator lock count
@@ -166,7 +166,7 @@ namespace dv {
 
 		fileDescriptor->removeAllNotificationSockets();
 
-        LOG(SIM_HANDLER, 1, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+        LOG(SIMULATOR, 1, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
 		//std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
 		//		  << client_notification_count << " clients." << std::endl;
 

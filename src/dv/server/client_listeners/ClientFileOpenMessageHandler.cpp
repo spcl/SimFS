@@ -25,8 +25,7 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "ClientFileOpenMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+            LOG(ERROR, 0, "Insufficient number of args!");
 			return;
 		}
 
@@ -35,8 +34,7 @@ namespace dv {
 		try {
 			appid_ = dv::stoid(params[kAppIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in ClientFileOpenMessageHandler: could not extract integer appid from params: "
-					  << params[kAppIdIndex] << std::endl;
+            LOG(ERROR, 0, "Cannot extract appid!");
 		}
 
 		for (unsigned int i = kJobParamsStartIndex; i < params.size(); ++i) {
@@ -48,11 +46,11 @@ namespace dv {
 
 	void ClientFileOpenMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			close(socket_);
 			return;
 		}
-        LOG(CLI_HANDLER, 0, "Client " + std::to_string(appid_) + " is opening " + filename_);
+        LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename_);
 		dv_->getStatsPtr()->incTotal();
 
 		// client open: we need the full get from the cache to trigger all actions in case of cache miss
@@ -64,8 +62,7 @@ namespace dv {
 
 		if (clientDescriptor == nullptr) {
 			// problem: unknown client
-			std::cout << "ClientFileOpenMessageHandler: Warning: client with id " << appid_ << " not recognized!!!"
-					  << std::endl;
+            LOG(WARNING, 0, "Client not recognized: " + std::to_string(appid_));
 			// TODO: do more? since this indicates a protocol violation (see: all clients should use Hello messages first)
 			//       e.g. return here without further processing?
             return;

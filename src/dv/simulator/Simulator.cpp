@@ -222,30 +222,21 @@ namespace dv {
 		simjob->setSimStart(simstart);
 		simjob->setSimStop(simstop);
 
-		if (dv_ptr_->getConfigPtr()->dv_debug_output_on_) {
-			std::cout << "generateSimJob(): for target start nr " << target_start_nr;
-			if (target_start_nr != target_stop_nr) {
-				std::cout << " and target stop nr " << target_stop_nr;
-			}
-			std::cout << ": simstart " << simstart << ", simstop " << simstop
-					  << " (numbers in normalized result file number space)"
-					  << std::endl;
-		}
+
+        LOG(CLIENT, 1, "SimJob: target: " + std::to_string(target_start_nr) + "->" + std::to_string(target_stop_nr) + "; actual values: " + std::to_string(simstart) + "->" + std::to_string(simstop));
 
 		// continue with valid jobs
 		if (dv_ptr_->getConfigPtr()->dv_debug_output_on_) {
 			simjob->printParameters(&std::cout);
 		}
-
+        
 		if (dv_ptr_->getConfigPtr()->optional_dv_prefetch_all_files_at_once_) {
 			simstart = 0;
 			simstop = dv_ptr_->getConfigPtr()->optional_sim_max_nr_;
 			simjob->setSimStart(simstart);
 			simjob->setSimStop(simstop);
 			if (dv_ptr_->getConfigPtr()->dv_debug_output_on_) {
-				std::cout << "generateSimJob(): adjusted simstart to 0 and simstop to " << simstop
-						  << " (optional_dv_prefetch_all_files_at_once flag is set)"
-						  << std::endl;
+                LOG(CLIENT, 0, "Simulating everything! (optional_dv_prefetch_all_files_at_once): 0->" + std::to_string(simstop));
 			}
 		}
 

@@ -20,9 +20,7 @@ namespace dv {
 			: MessageHandler(dv, socket, params) {
 
 		if (params.size() < (kDimensionDetailsOn ? kNeededVectorSizeWithDetails : kNeededVectorSize)) {
-			std::cerr << "ClientVariableGetMessageHandler: insufficient number of arguments in params. Need "
-					  << (kDimensionDetailsOn ? kNeededVectorSizeWithDetails : kNeededVectorSize) << " got "
-					  << params.size() << std::endl;
+            LOG(ERROR, 0, "Insufficient number of arguments!");
 			return;
 		}
 
@@ -32,8 +30,7 @@ namespace dv {
 		try {
 			appid_ = dv::stoid(params[kAppIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ClientVariableGetMessageHandler: appid must be an integer value " << params[kAppIdIndex]
-					  << std::endl;
+            LOG(ERROR, 0, "appid must be an integer!");
 			return;
 		}
 
@@ -42,8 +39,7 @@ namespace dv {
 			try {
 				dimensions_ = dv::stodim(params[kDimensionsIndex]);
 			} catch (const std::invalid_argument &ia) {
-				std::cerr << "ClientVariableGetMessageHandler: dimensions must be an integer "
-						  << params[kDimensionsIndex] << std::endl;
+                LOG(ERROR, 0, "dimensions must be an integer!");
 				return;
 			}
 
@@ -58,15 +54,14 @@ namespace dv {
 
 	void ClientVariableGetMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			close(socket_);
 			return;
 		}
 
 		ClientDescriptor *clientDescriptor = dv_->findClientDescriptor(appid_);
 		if (clientDescriptor == nullptr) {
-			std::cerr << "Error: ClientVariableGetMessageHandler::serve(): could not find client descriptor for appid "
-					  << appid_ << std::endl;
+            LOG(ERROR, 0, "Cannot find client descriptor for this appid: " + std::to_string(appid_));
 			// TODO: also here, do more? Since this is quite a severe protocol violation (i.e. no hello message before)
 			close(socket_);
 			return;
@@ -76,8 +71,7 @@ namespace dv {
 
 		FileDescriptor *fileDescriptor = dv_->getFileCachePtr()->get(filename_);
 		if (fileDescriptor == nullptr) {
-			std::cerr << "Error: ClientVariableGetMessageHandler::serve(): could not find file descriptor for file "
-					  << filename_ << std::endl;
+            LOG(ERROR, 0, "Cannot find file descriptor for: " + filename_);
 			// note: this is a security check. This should never happen for properly opened files (see locked).
 			close(socket_);
 			return;
@@ -91,10 +85,10 @@ namespace dv {
 			sendAll(kLibReplyFileOpen);
 			close(socket_);
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-				std::cout << "   Get request: data avail" << std::endl;
+                LOG(CLIENT, 1, "READ: data avail");
 			}
 
-			std::cout << "log_get_var_avail " << filename_ << std::endl;
+			//std::cout << "log_get_var_avail " << filename_ << std::endl;
 		} else {
 			// let the client wait while the data is being simulated
 			// note: message receive is blocking in DVLib
@@ -110,10 +104,10 @@ namespace dv {
 
 
 			if (dv_->getConfigPtr()->dv_debug_output_on_) {
-				std::cout << "   Get request: data not ready. Added socket to notification set." << std::endl;
+                LOG(CLIENT, 1, "READ: data not avail. Will notify.");
 			}
 
-			std::cout << "log_get_var_wait " << filename_ << std::endl;
+			//std::cout << "log_get_var_wait " << filename_ << std::endl;
 		}
 
 		// a variable get makes the file descriptor MRU

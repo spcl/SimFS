@@ -318,10 +318,10 @@ namespace dv {
 
 	dv::id_type SimJob::launch() {
 		prepare();
-		std::cout << "starting job " << jobname_ << std::endl;
+        LOG(CLIENT, 1, "Starting job" + jobname_);
 
 		if (!createRedirectFolders()) {
-			std::cerr << "SEVERE ERROR: could not create redirect folder" << std::endl;
+            LOG(ERROR, 0, "Cannot create redirect folder!");
 			return -1;
 		}
 
@@ -331,7 +331,7 @@ namespace dv {
 		//char buffer[kShellBufferSize];
 		in = popen(command.c_str(), "r");
 		if (in == nullptr) {
-			std::cerr << "SEVERE ERROR: could not launch the job using bash" << std::endl;
+            LOG(ERROR, 0, "Cannot launch simjob!");
 			return -1;
 		}
 
@@ -339,8 +339,9 @@ namespace dv {
 			std::string next = buffer;
 			result += next;
 		}*/
+       
 		pclose(in);
-
+        
 		/*try {
 			sysjobid_ = std::stol(result);
 		} catch (const std::invalid_argument &ia) {
@@ -349,7 +350,8 @@ namespace dv {
 		}*/
        
         sysjobid_ = jobid_;
-		std::cout << "simulation sysjobid: " << sysjobid_ << std::endl;
+        
+		//std::cout << "simulation sysjobid: " << sysjobid_ << std::endl;
 
         start_time_ = toolbox::TimeHelper::now();
 		return jobid_;
@@ -366,8 +368,8 @@ namespace dv {
 	bool SimJob::createRedirectFolders() {
 		redirect_path_result_ = toolbox::StringHelper::joinPath(dv_ptr_->getRedirectPath(), "simjob_" + std::to_string(jobid_));
 		redirect_path_checkpoint_ = toolbox::StringHelper::joinPath(redirect_path_result_, "_DV_chk_");
-		std::cout << "Creating redirect folders for results " << redirect_path_result_
-				  << " and checkpoints " << redirect_path_checkpoint_ << std::endl;
+		
+        LOG(CLIENT, 1, "Creating redirect folders: results: " + redirect_path_result_ + "; checkpoints: " + redirect_path_checkpoint_);
 		std::string command = "mkdir -p " + redirect_path_checkpoint_; // creates both
 		system(command.c_str());
 
@@ -376,7 +378,7 @@ namespace dv {
 
 	void SimJob::removeRedirectFolders() {
 		if(!redirect_path_result_.empty() && toolbox::FileSystemHelper::folderExists(redirect_path_result_)) {
-			std::cout << std::endl << "Removing redirect folder " << redirect_path_result_ << std::endl;
+            LOG(CLIENT, 1, "Removing redirect folder: " + redirect_path_result_);
 			std::string command = "rm -r " + redirect_path_result_; // removes both
 			system(command.c_str());
 		}

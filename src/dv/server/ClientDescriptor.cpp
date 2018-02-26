@@ -26,7 +26,7 @@ namespace dv {
     void ClientDescriptor::profile(FileDescriptor * cache_entry){
 		if (notified_ || cache_entry != nullptr) {
 			double newtau = cli_profiler_.newTau();
-            printf("PROFILER: adding tau: %lf; current tau: %lf\n", newtau, cli_profiler_.getTau());
+            LOG(PREFETCHER, 0, "adding tau: " + std::to_string(newtau) + "; current tau: " + std::to_string(cli_profiler_.getTau()));
 			notified_ = false;
 		}
     }
@@ -74,8 +74,7 @@ namespace dv {
 
             //logs & stats
 			dv_->getStatsPtr()->incMisses();
-            printf("   Restarting simulation. (params: %s)\n", parameters[0].c_str());
-
+            LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
             newSimulation(target_nr, target_nr, parameters[0]);
 
             return false;
@@ -87,25 +86,27 @@ namespace dv {
                 /* there is a simulation that will produce this file */
                 //dv::id_type waiting_time = requested_nr - already_simulating_job->getCurrentNr();
 				dv_->getStatsPtr()->incWaiting();
-                printf("   Data is already being simulated by simjob %li\n", already_simulating_job->getJobId());
+                LOG(CLIENT, 0, "HIT (WAIT): Data already being simulated by: " + std::to_string(already_simulating_job->getJobId()));
                 already_simulating_job->handleClientFileOpen(target_nr);
                 return false;    
 
             } else if (cache_entry!=nullptr && cache_entry->isFileUsedBySimulator()) { 
                 /* the simulator is currently writing this file! */
+                LOG(CLIENT, 0, "HIT (WAIT): Simulator is writing on this file!");
                 return false;
 
             } else { 
                 /* is a full hit: the data is available */
+                LOG(CLIENT, 0, "HIT! Data is available!");
                 return true;
             }
         }
 
 
-		std::cout << "# " << dv_->getConfigPtr()->dv_stat_label_
-				  << " open " << openop_
-				  << " " << cli_profiler_.rstring()
-				  << " " << sim_profiler_.rstring() << std::endl;
+		//std::cout << "# " << dv_->getConfigPtr()->dv_stat_label_
+		//		  << " open " << openop_
+		//		  << " " << cli_profiler_.rstring()
+		//		  << " " << sim_profiler_.rstring() << std::endl;
 		openop_++;
  
 	}
@@ -126,12 +127,14 @@ namespace dv {
             simjob->handleClientFileOpen(target_nr);
             //std::cout << "Cost: [" << appid_ << " 1 " << requested_nr - simjob->getSimStart() << "]" << std::endl;  
 
+            LOG(CLIENT, 0, "New simulation: ID: " + std::to_string(simjobid) + " range: " + std::to_string(simjob->getSimStart()) + " -> " + std::to_string(simjob->getSimStop()));
+
 			dv_->enqueueJob(simjobid, std::move(simjob));
-			// do not access simjob after this point again
-			std::cout << "   Simulation added to queue with id " << simjobid << std::endl;
+			// do not access simjob after this point againA
+            //LOG(CLIENT, 1, "Simulation added to queue with id " + std::to_string(simjobid));
             return true;
 		} else {
-			std::cout << "   Simulation not needed or not possible (invalidated simjob)." << std::endl;
+            LOG(WARNING, 0, "Simulation non needed or not possible (invalid simjob)!");
             return false;
 		}
     }
@@ -159,7 +162,7 @@ namespace dv {
 
 		cli_profiler_.reset();
 		notified_ = true;
-		std::cout << "Client notified. Sim perf: " << sim_profiler_.toString() << std::endl;
+        LOG(PREFETCHER, 0, "Client notified: Sim profile: " + sim_profiler_.toString());
 	}
 
 

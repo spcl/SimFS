@@ -20,22 +20,21 @@ namespace dv {
 			MessageHandler(dv, socket, params) {
 
 		if (params.size() < kNeededVectorSize) {
-			std::cerr << "HelloMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
+            LOG(ERROR, 0, "Insufficient number of arugments!");
 			return;
 		}
 
 		try {
 			gnirank_ = dv::stoid(params[kGniRankIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "HelloMessageHandler: gnirank must be an integer value " << params[kGniRankIndex] << std::endl;
+            LOG(ERROR, 0, "gnirank must be an integer!");
 			return;
 		}
 
 		try {
 			jobid_ = dv::stoid(params[kJobIdIndex]);
 		} catch (const std::invalid_argument &ia) {
-			std::cerr << "HelloMessageHandler: jobid must be an integer value " << params[kJobIdIndex] << std::endl;
+            LOG(ERROR, 0, "jobid must be an integer!");
 			return;
 		}
 
@@ -44,16 +43,17 @@ namespace dv {
 
 	void HelloMessageHandler::serve() {
 		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+            LOG(ERROR, 0, "Incomplete initialization!");
 			close(socket_);
 			return;
 		}
 
-		std::cout << "DV: received HELLO msg. gni_rank " << gnirank_ << " jobid " << jobid_ << std::endl;
+
+		//std::cout << "DV: received HELLO msg. gni_rank " << gnirank_ << " jobid " << jobid_ << std::endl;
 
 		SimJob *simJob = dv_->findSimJob(jobid_);
 		if (simJob != nullptr) {
-			std::cout << "Hello from a simulator. gni_rank " << gnirank_ << std::endl;
+            LOG(SIMULATOR, 1, "Hello from a simulator!");
 
 			// adjust gnirank & and send message
 			simJob->setGniRank(gnirank_);
@@ -64,7 +64,7 @@ namespace dv {
 			sendAll(reply);
 
 		} else {
-			std::cout << "Hello from a client!" << std::endl;
+            LOG(CLIENT, 1, "Hello from a client!");
 
 			// register new client
 			dv::id_type rank = dv_->getNewRank();

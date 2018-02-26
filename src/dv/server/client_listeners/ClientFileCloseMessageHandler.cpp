@@ -33,7 +33,7 @@ namespace dv {
 			return;
 		}
 
-        LOG(CLI_HANDLER, 0, "Client is closing " + filename_);
+        LOG(CLIENT, 0, "Unlocking " + filename_);
 
 		// only internal lookup is needed -> thus, no refresh later
 		// note: there is no point in making a file a fresh MRU while handling its close message

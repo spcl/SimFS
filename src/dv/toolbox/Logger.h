@@ -7,12 +7,13 @@
 
 #define ERROR 0
 #define INFO 1
-#define SIM_HANDLER 2
-#define CLI_HANDLER 3
+#define SIMULATOR 2
+#define CLIENT 3
 #define CACHE 4
 #define WARNING 5
+#define PREFETCHER 6
 
-#define KEYNAMES "ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "WARNING"
+#define KEYNAMES "ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "WARNING", "PREFETCHER"
 
 
 namespace toolbox{
