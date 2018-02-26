@@ -7,26 +7,26 @@
 
 namespace dv {
 
-	VariableDescriptor::VariableDescriptor() : id_(""), offset_(0), count_(0) {}
+VariableDescriptor::VariableDescriptor() : id_(""), offset_(0), count_(0) {}
 
-	VariableDescriptor::VariableDescriptor(const std::string &id, const size_t offset, const size_t count) :
-			id_(id), offset_(offset), count_(count) {
-	}
+VariableDescriptor::VariableDescriptor(const std::string &id, const size_t offset, const size_t count) :
+    id_(id), offset_(offset), count_(count) {
+}
 
-	void VariableDescriptor::extendWithIndices(size_t offset, size_t count) {
-		// TODO
-	}
+void VariableDescriptor::extendWithIndices(size_t offset, size_t count) {
+    // TODO
+}
 
-	void VariableDescriptor::extendWithDescriptor(const VariableDescriptor &other) {
-		// TODO
-	}
+void VariableDescriptor::extendWithDescriptor(const VariableDescriptor &other) {
+    // TODO
+}
 
-	bool VariableDescriptor::contains(size_t offset, size_t count) {
-		// TODO
-		return true;
-	}
+bool VariableDescriptor::contains(size_t offset, size_t count) {
+    // TODO
+    return true;
+}
 
-	void VariableDescriptor::print(std::ostream *out) {
-		*out << "VariableDescriptor " << id_ << ": offset " << offset_ << " count " << count_ << std::endl;
-	}
+void VariableDescriptor::print(std::ostream *out) {
+    *out << "VariableDescriptor " << id_ << ": offset " << offset_ << " count " << count_ << std::endl;
+}
 }

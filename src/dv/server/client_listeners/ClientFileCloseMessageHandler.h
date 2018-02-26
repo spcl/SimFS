@@ -12,19 +12,19 @@
 
 namespace dv {
 
-	class ClientFileCloseMessageHandler : public MessageHandler {
-	public:
-		ClientFileCloseMessageHandler(DV *dv, int socket, const std::vector<std::string> &params);
+class ClientFileCloseMessageHandler : public MessageHandler {
+public:
+    ClientFileCloseMessageHandler(DV *dv, int socket, const std::vector<std::string> &params);
 
-		virtual void serve() override;
+    virtual void serve() override;
 
 
-	private:
-		static constexpr int kFilenameIndex = 1;
-		static constexpr int kNeededVectorSize = 2;
+private:
+    static constexpr int kFilenameIndex = 1;
+    static constexpr int kNeededVectorSize = 2;
 
-		std::string filename_;
-	};
+    std::string filename_;
+};
 
 }
 
