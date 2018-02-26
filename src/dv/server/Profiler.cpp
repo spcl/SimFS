@@ -12,76 +12,78 @@
 
 namespace dv {
 
-	Profiler::Profiler() {
-		reset();
-	}
+Profiler::Profiler() {
+    reset();
+}
 
-	void Profiler::reset() {
-		last_time_ = toolbox::TimeHelper::now();
-	}
+void Profiler::reset() {
+    last_time_ = toolbox::TimeHelper::now();
+}
 
-	void Profiler::addAlpha(double alpha) {
-		alphas_.push_back(alpha);
-		last_time_ = toolbox::TimeHelper::now();
-        MOVING_AVG(moving_alpha_, alpha);
-        //printf("PROFILER: adding alpha: %lf; new alpha: %lf\n", alpha, moving_alpha_);
-	}
+void Profiler::addAlpha(double alpha) {
+    alphas_.push_back(alpha);
+    last_time_ = toolbox::TimeHelper::now();
+    MOVING_AVG(moving_alpha_, alpha);
+    //printf("PROFILER: adding alpha: %lf; new alpha: %lf\n", alpha, moving_alpha_);
+}
 
-    double Profiler::getAlpha() const {
-		if (alphas_.size() == 0 || taus_.size() == 0) {
-			return -1.0;
-		}
-
-        return moving_alpha_;
-    
+double Profiler::getAlpha() const {
+    if (alphas_.size() == 0 || taus_.size() == 0) {
+        return -1.0;
     }
 
-	double Profiler::getMedianAlpha() const {
-		if (alphas_.size() == 0 || taus_.size() == 0) {
-			return -1.0;
-		}
+    return moving_alpha_;
 
-		return toolbox::StatisticsHelper::median(alphas_);
-	}
+}
 
-	double Profiler::newTau() {
-		toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
-        double newtau = toolbox::TimeHelper::seconds(last_time_, now);
-		taus_.push_back(newtau);
-		last_time_ = now;
-        MOVING_AVG(moving_tau_, newtau);
-        return newtau;
-	}
-
-	void Profiler::extendTaus(const std::vector<double> &taus) {
-		taus_.insert(taus_.end(), taus.begin(), taus.end());
-        for (double tau : taus){ MOVING_AVG(moving_tau_, tau); }
-	}
-
-	void Profiler::clearTaus() {
-		taus_.clear();
-	}
-
-    double Profiler::getTau() const {
-        return moving_tau_;
+double Profiler::getMedianAlpha() const {
+    if (alphas_.size() == 0 || taus_.size() == 0) {
+        return -1.0;
     }
 
-	double Profiler::getMedianTau() const {
-		if (taus_.size() == 0) {
-			return -1.0;
-		}
+    return toolbox::StatisticsHelper::median(alphas_);
+}
 
-        
-		return toolbox::StatisticsHelper::median(taus_);
-	}
-    
+double Profiler::newTau() {
+    toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+    double newtau = toolbox::TimeHelper::seconds(last_time_, now);
+    taus_.push_back(newtau);
+    last_time_ = now;
+    MOVING_AVG(moving_tau_, newtau);
+    return newtau;
+}
 
-	std::string Profiler::rstring() const {
-		return std::to_string(getAlpha()) + " " + std::to_string(getTau());
-	}
+void Profiler::extendTaus(const std::vector<double> &taus) {
+    taus_.insert(taus_.end(), taus.begin(), taus.end());
+    for (double tau : taus) {
+        MOVING_AVG(moving_tau_, tau);
+    }
+}
 
-	std::string Profiler::toString() const {
-		return "Alpha: " + std::to_string(getAlpha()) + "; Tau: " + std::to_string(getTau());
-	}
+void Profiler::clearTaus() {
+    taus_.clear();
+}
+
+double Profiler::getTau() const {
+    return moving_tau_;
+}
+
+double Profiler::getMedianTau() const {
+    if (taus_.size() == 0) {
+        return -1.0;
+    }
+
+
+    return toolbox::StatisticsHelper::median(taus_);
+}
+
+
+std::string Profiler::rstring() const {
+    return std::to_string(getAlpha()) + " " + std::to_string(getTau());
+}
+
+std::string Profiler::toString() const {
+    return "Alpha: " + std::to_string(getAlpha()) + "; Tau: " + std::to_string(getTau());
+}
 
 }

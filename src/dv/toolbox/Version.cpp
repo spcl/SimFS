@@ -9,8 +9,8 @@
 
 namespace toolbox {
 
-	void Version::print(std::ostream *out) {
-		*out << name_ << " v" << major_ << "." << minor_ << "." << patch_ << " (" << date_ << ") " << std::endl;
-	}
+void Version::print(std::ostream *out) {
+    *out << name_ << " v" << major_ << "." << minor_ << "." << patch_ << " (" << date_ << ") " << std::endl;
+}
 
 }

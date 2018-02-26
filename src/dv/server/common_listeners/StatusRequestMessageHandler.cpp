@@ -13,38 +13,38 @@
 
 namespace dv {
 
-	StatusRequestMessageHandler::StatusRequestMessageHandler(DV *dv, int socket,
-															 const std::vector<std::string> &params)
-			: MessageHandler(dv, socket, params) {
+StatusRequestMessageHandler::StatusRequestMessageHandler(DV *dv, int socket,
+        const std::vector<std::string> &params)
+    : MessageHandler(dv, socket, params) {
 
-		if (params.size() < kNeededVectorSize) {
-			std::cerr << "StatusRequestMessageHandler: insufficient number of arguments in params. Need "
-					  << kNeededVectorSize << " got " << params.size() << std::endl;
-			return;
-		}
+    if (params.size() < kNeededVectorSize) {
+        std::cerr << "StatusRequestMessageHandler: insufficient number of arguments in params. Need "
+                  << kNeededVectorSize << " got " << params.size() << std::endl;
+        return;
+    }
 
-		try {
-			appid_ = dv::stoid(params[kAppIdIndex]);
-		} catch (const std::invalid_argument &ia) {
-			std::cerr << "ERROR in StatusRequestMessageHandler: could not extract integer appid from params: "
-					  << params[kAppIdIndex] << std::endl;
-		}
+    try {
+        appid_ = dv::stoid(params[kAppIdIndex]);
+    } catch (const std::invalid_argument &ia) {
+        std::cerr << "ERROR in StatusRequestMessageHandler: could not extract integer appid from params: "
+                  << params[kAppIdIndex] << std::endl;
+    }
 
-		initialized_ = true;
-	}
+    initialized_ = true;
+}
 
-	void StatusRequestMessageHandler::serve() {
-		if (!initialized_) {
-			std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
-			close(socket_);
-			return;
-		}
+void StatusRequestMessageHandler::serve() {
+    if (!initialized_) {
+        std::cerr << "   -> cannot serve message due to incomplete initialization." << std::endl;
+        close(socket_);
+        return;
+    }
 
-		std::cout << "DV: received StatusRequest msg." << std::endl;
+    std::cout << "DV: received StatusRequest msg." << std::endl;
 
-		sendAll(dv_->getStatusSummary().toString());
+    sendAll(dv_->getStatusSummary().toString());
 
-		close(socket_);
-	}
+    close(socket_);
+}
 
 }
