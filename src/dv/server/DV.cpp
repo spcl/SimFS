@@ -1,5 +1,5 @@
 //
-// Created by Pirmin Schmid on 13.04.17.
+// 04/2017: Porting/rewriting from SDG's python version (PS) 
 //
 // network handling follows this guide (code in Public Domain) with modifications:
 // http://beej.us/guide/bgnet/output/html/multipage/index.html

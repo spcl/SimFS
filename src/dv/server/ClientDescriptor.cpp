@@ -1,5 +1,7 @@
-//
-// Created by Pirmin Schmid on 15.04.17.
+// 
+// 01/2018: Prefetching (SDG)
+// 09/2017: Adding support for range queries (only stubs) (PS)
+// 04/2017: Porting/rewriting from SDG's python version (PS)
 //
 
 #include "ClientDescriptor.h"

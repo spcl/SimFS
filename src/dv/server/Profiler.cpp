@@ -1,5 +1,6 @@
 //
-// Created by Pirmin Schmid on 14.04.17.
+// 01/2018: Moving AVG (SDG)
+// 04/2017: Porting/rewriting from SDG's python version (PS)
 //
 
 #include "Profiler.h"

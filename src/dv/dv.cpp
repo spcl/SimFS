@@ -2,7 +2,8 @@
 // Handles input arguments and environment variables
 // and starts the server
 //
-// 2017-04-12 / 2017-09-25 Pirmin Schmid
+// 01/2018: SimFS (SDG)
+// 04/2017: Porting/rewriting from SDG's python version (Pirmin Schmid)
 //
 
 #include <csignal>

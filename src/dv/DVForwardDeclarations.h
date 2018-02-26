@@ -1,5 +1,5 @@
 //
-// Created by Pirmin Schmid on 19.04.17.
+// 04/2017: Pirmin Schmid
 //
 
 #ifndef DV_DVFORWARDDECLARATIONS_H_

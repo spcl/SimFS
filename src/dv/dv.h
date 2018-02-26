@@ -1,5 +1,5 @@
 //
-// Created by Pirmin Schmid on 13.05.17.
+// 05/2017: Pirmin Schmid
 //
 
 // helper include file that holds some constants

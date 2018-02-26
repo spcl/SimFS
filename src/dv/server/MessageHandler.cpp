@@ -1,5 +1,5 @@
 //
-// Created by Pirmin Schmid on 13.04.17.
+// 04/2017: Porting/rewriting from SDG's python version (PS)
 //
 
 #include "MessageHandler.h"
