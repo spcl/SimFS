@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include "DVStats.h"
-#include "../toolbox/Logger.h"
+#include "../DVLog.h"
 
 namespace dv {
 

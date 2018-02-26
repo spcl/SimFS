@@ -124,6 +124,39 @@ void error_exit(const std::string &name, const std::string &additional_text) {
 	exit(1);
 }
 
+void initLogger(){
+
+    /* Note: this order has to reflect the macro numbering! (see below)*/
+    const char * keynames[] = {"ERROR", "INFO", "SIMULATOR", "CLIENT", "CACHE", "PREFETCHER", "WARNING", NULL};
+
+    char * log_keys = getenv("SIMFS_LOG");
+    char * log_level_str = getenv("SIMFS_LOG_LEVEL");
+
+    int log_level = log_level_str==NULL? 0 : atoi(log_level_str);
+
+    Logger::setLogKey(ERROR, 10, keynames[0], LOG_FULL, ANSI_COLOR_RED);
+    Logger::setLogKey(INFO, -1, keynames[1], LOG_SIMPLE, ANSI_COLOR_YELLOW);
+    Logger::setLogKey(SIMULATOR, -1, keynames[2], LOG_SIMPLE, ANSI_COLOR_BLUE);
+    Logger::setLogKey(CLIENT, -1, keynames[3], LOG_SIMPLE, ANSI_COLOR_GREEN);
+    Logger::setLogKey(CACHE, -1, keynames[4], LOG_SIMPLE, ANSI_COLOR_YELLOW);
+    Logger::setLogKey(PREFETCHER, -1, keynames[5], LOG_SIMPLE, ANSI_COLOR_MAGENTA);
+    Logger::setLogKey(WARNING, -1, keynames[6], LOG_SIMPLE, ANSI_COLOR_YELLOW);
+    
+    if (log_keys!=NULL) {
+        std::string keys_str = std::string(log_keys);
+        const char ** keyptr = keynames; 
+
+
+        
+        while (*keyptr!=NULL){
+            if (keys_str.find(std::string(*keyptr))!=std::string::npos){
+                /* Strong assumption about jeynames, MACRO ordering/numbering! */
+                Logger::setLogKeyLevel(ERROR + (keyptr-keynames), log_level);
+            }
+            keyptr++;
+        }
+    }
+}
 
 int main(int argc, char * argv[]){
 
@@ -143,11 +176,7 @@ int main(int argc, char * argv[]){
     }
 
     /* Init logger */
-    char * log_keys = getenv("SIMFS_LOG");
-    char * log_level_str = getenv("SIMFS_LOG_LEVEL");
-
-    if (log_keys!=NULL) Logger::setLogKeys(log_keys, log_level_str==NULL? 0 : atoi(log_level_str));
-    
+    initLogger();
 
     /* Parsing & checking arguments */
 	if (argc < 2) {

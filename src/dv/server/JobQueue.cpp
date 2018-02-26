@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "../simulator/SimJob.h"
-#include "../toolbox/Logger.h"
+#include "../DVLog.h"
 
 namespace dv {
 
