@@ -1,11 +1,19 @@
+#!/bin/bash
+
 module switch PrgEnv-cray PrgEnv-gnu 2> /dev/null
 
 current_path=$(pwd)
 code_source_path=$current_path/src/dv
-target_path=$current_path/bin
+
+if [ "$1" == "install" ]; then
+    target_path="/usr/bin/";
+else
+    target_path=$current_path/bin;
+fi
+
 build_path=$current_path/build
 workspace_path=$current_path/workspace
-dvlib_path=$current_path/lib/
+dvlib_path=$current_path/build/lib/
 
 mkdir -p $target_path
 mkdir -p $build_path
@@ -36,4 +44,15 @@ cp $build_path/simfs $target_path/
 #cp $build_path/stop_dv $target_path/
 #cp $build_path/dv_status $target_path/
 cp $build_path/check_dv_config_file $target_path/
+
+echo "Installing examples"
+bash dv_config_files/configure.sh $current_path
+
+
+
+
+
+echo "Done!"
+
+
 
