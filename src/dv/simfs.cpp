@@ -150,7 +150,6 @@ void initLogger() {
     Logger::setLogKey(WARNING, -1, keynames[5], LOG_SIMPLE, ANSI_COLOR_YELLOW);
     Logger::setLogKey(PREFETCHER, -1, keynames[6], LOG_SIMPLE, ANSI_COLOR_MAGENTA);
 
-    printf("log keys: %s\n", log_keys);
 
     if (log_keys!=NULL) {
         std::string keys_str = std::string(log_keys);
