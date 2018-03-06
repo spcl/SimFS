@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LD_PRELOAD=/home/salvo/ETH/SimFS/lib/libdvl.so
+export LD_PRELOAD=__SIMFS_DIR__/build/lib/libdvl.so
 export DV_SIMULATOR=1
 export DV_JOBID=$jobid
 export DV_PROXY_SRV_IP=$dvl_address
