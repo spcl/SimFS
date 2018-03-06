@@ -6,14 +6,14 @@ current_path=$(pwd)
 code_source_path=$current_path/src/dv
 
 if [ "$1" == "install" ]; then
-    target_path="/usr/bin/";
-else
-    target_path=$current_path/bin;
+    cp $current_path/build/bin/simfs /usr/bin/
+    exit 0
 fi
 
 build_path=$current_path/build
 workspace_path=$current_path/workspace
 dvlib_path=$current_path/build/lib/
+target_path=$current_path/build/bin
 
 mkdir -p $target_path
 mkdir -p $build_path
