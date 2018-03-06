@@ -1,12 +1,8 @@
-
-1) Configure:
-
-
 Install:
 
   1) Build DV 
-    - `./build.sh` to install in current_dir/build OR
     - `sudo ./build.sh install` to install in /usr/bin
+    - `./build.sh` to install in current_dir/build OR
 
   2) Build DVLib
     - `./build_dvlib_x86.sh [--netcdf <netcdf path>] [--hdf5_108 <HDF5 1.8 path>] [--hdf5_110 <HDF5 1.10 path>] [--liblsb <liblsb path>]`
