@@ -1,0 +1,8 @@
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+
+#cmakedefine SIMFS_INSTALL_PATH "@SIMFS_INSTALL_PATH@"
+#cmakedefine SIMFS_WORKSPACE "@SIMFS_WORKSPACE_PATH@"
+#cmakedefine SIMFS_DVLIB "@SIMFS_DVLIB_PATH@"
+
+#endif
