@@ -1,0 +1,249 @@
+-- integer >= 0
+api_version = 5
+
+
+-- dv server -------------------------------------------------------------------
+
+-- string: name or IP address
+dv_hostname = "0.0.0.0"
+
+-- strings
+dv_client_port = "8888"
+dv_sim_port = "8889"
+dv_batch_job_id = "0_0"
+dv_statistics_label = "na"
+
+-- ints
+dv_max_parallel_simjobs = 2
+dv_max_horizontal_prefetching_intervals = 1
+dv_max_vertical_prefetching_intervals = 1
+
+-- optional
+-- 1 for true; 0 for false
+-- note: true implies that optional_sim_max_nr *must* be set correctly
+optional_dv_prefetch_all_files_at_once = 0
+
+
+-- simulator -------------------------------------------------------------------
+
+
+-- strings
+sim_config_path = "__SIMFS_DIR__/examples/heatequation/simulator/"
+sim_checkpoint_path = "__SIMFS_DIR__/examples/heatequation/restarts/"
+sim_result_path = "__SIMFS_DIR__/examples/heatequation/output/"
+sim_temporary_redirect_path = "/tmp/"
+
+
+-- strings, keep = "" if not used
+-- note re output files:
+-- UID, APPID, JOBID can be used in the filename;
+-- they will be replaced by actual values during job generation.
+-- template_style:
+--    0 for not used
+--    1 for {{key}} style
+--    2 for $key and $(key) style; note $$ must be used for $ in output file
+sim_parameter_template_style = 0
+sim_parameter_template_file = ""
+sim_parameter_output_file = ""
+
+sim_job_template_style = 2
+sim_job_template_file = "__SIMFS_DIR__/examples/heatequation/simulator/job_template.sh"
+sim_job_output_file = "simjob_UID_APPID_JOBID.sh"
+
+-- int
+sim_kill_threshold = 0
+
+-- int; only needed for optional_dv_prefetch_all_files_at_once == 1
+-- i.e. create all files; is calculated during init, if needed
+optional_sim_max_nr = 0
+
+-- file cache ------------------------------------------------------------------
+
+-- string: unlimited LRU ARC LIRS BCL DCL PLRU PBCL PDCL
+filecache_type = "LRU"
+
+-- int > 0
+filecache_size = 100
+
+-- int >= 0 and < file_cache_size
+filecache_fifo_queue_size = 0
+
+-- int > 0 and < (filecache_size - filecache_fifo_queue_size); only needed for LIRS
+filecache_lir_set_size = 800
+
+-- int in range [1, (filecache_size - filecache_fifo_queue_size)]
+filecache_protected_mrus = 1
+
+-- double in range [0.0, 1.0]
+filecache_penalty_factor = 0.0
+
+
+-- functions -------------------------------------------------------------------
+
+
+-- returns checkpoint file type nr (or 0 for not a result file)
+-- it replaces former is_checkpoint_file() check
+function get_checkpoint_file_type(filename)
+    name = basename(filename)
+    if (string.sub(name, 1, 1) == "r") then 
+        return 1;
+    end
+    return 0;
+end
+
+
+-- assumes proper filename (see check above)
+-- return value must be an integer >= 0
+function checkpoint2nr(filename, checkpoint_file_type)
+    name = basename(filename)
+    return tonumber(string.sub(name, 9))
+end
+
+
+-- returns result file type nr (or 0 for not a result file)
+-- it replaces former is_result_file() check
+function get_result_file_type(filename)
+    name = basename(filename)
+    if (string.sub(name, 1, 1) == "d") then 
+        return 1;
+    end
+    return 0;
+end
+
+
+-- return value must be an integer >= 0
+function result2nr(filename, result_file_type)
+    name = basename(filename)
+    return tonumber(string.sub(name, 6))
+end
+
+
+-- this function is called after simjob generation but before
+-- actually substituting the variables in the template files
+-- final adjustments can be made for the specific simulator
+-- simstart and simstop are provided as integer values
+-- (may need modifications most frequently)
+-- additionally, map_string contains the entire substitution hashmap
+-- in a "key1=value1;key2=value2; ..." format
+-- note: input simstart == number corresponding to restart/checkpoint
+--       input simstop == (number for next restart/checkpoint) - 1
+--                  or == target_nr if there is no ceiling checkpoint
+-- the function returns a string in a similar map_string format
+-- however, only updates must be returned, not the entire map_string
+-- typically, it will just look like "simstart=nr;simstop=nr"
+-- better use string.format to assure int type output
+-- note: simstart and simstart return values will only adjust
+-- the key value store for template writing but not the internal
+-- values used for SimJob.willProduce() checks.
+
+
+function simjob_final_adjustments(map_string, simstart, simstop)
+	if simstart == simstop then
+		simstop = simstop + 1
+	end
+	return string.format("simstart=%d;simstop=%d", simstart, simstop)
+end
+
+function run_checks(dv_api_version)
+    return 1
+end
+
+
+
+-- return 1 (true) in case of success; or 0 (false) in case of error
+function init(dv_api_version)
+	-- check env variables
+	e = os.getenv("DV_PROXY_SRV_IP")
+	if e ~= nil then
+		dv_hostname = e
+	end
+
+	e = os.getenv("DV_SIM_PORT")
+	if e ~= nil then
+		dv_sim_port = e
+	end
+
+	e = os.getenv("DV_CLIENT_PORT")
+	if e ~= nil then
+		dv_client_port = e
+	end
+
+	e = os.getenv("SLURMID")
+	if e ~= nil then
+		dv_batch_job_id = e
+	end
+
+	e = os.getenv("LSB_NAME")
+	if e ~= nil then
+		dv_statistics_label = e
+	end	
+
+	e = os.getenv("PREFETCH")
+	if e ~= nil then
+		dv_prefetch_opt = e
+	end
+
+	-- cache settings: ENV at the moment
+	-- overwriting with command line arguments follows
+	e = os.getenv("DV_FILECACHE_TYPE")
+	if e ~= nil then
+		filecache_type = e
+	end
+
+	e = os.getenv("DV_FILECACHE_SIZE")
+	if e ~= nil then
+		filecache_size = checkint(e, 1, math.maxinteger, -1, "ENV variable DV_FILECACHE_SIZE must be an integer > 0")
+		if filecache_size == -1 then
+			return 0
+		end
+	end
+
+	e = os.getenv("DV_FILECACHE_PROTECTED_MRUS")
+	if e ~= nil then
+		filecache_protected_mrus = checkint(e, 1, filecache_size, -1, "ENV variable DV_FILECACHE_PROTECTED_MRUS must be an integer in [1, cache_size]")
+		if filecache_protected_mrus == -1 then
+			return 0
+		end
+	end
+
+	e = os.getenv("DV_FILECACHE_PENALTY_FACTOR")
+	if e ~= nil then
+		filecache_penalty_factor = checknumber(e, 0.0, 1.0, -1.0, "ENV variable DV_FILECACHE_PENALTY_FACTOR must be a number in [0.0, 1.0]")
+		if filecache_penalty_factor < 0.0 then
+			return 0
+		end
+	end
+
+	-- setting this option: implies that optional_sim_max_nr must be set during private init.
+	e = os.getenv("DV_PREFETCH_ALL_FILES_AT_ONCE")
+	if e ~= nil then
+		n = checkint(e, 0, 1, -1, "optional ENV variable DV_PREFETCH_ALL_FILES_AT_ONCE must bei either 0 or 1; assumed == 0 if lacking")
+		if n == -1 then
+			return 0
+		else
+			optional_dv_prefetch_all_files_at_once = n
+		end
+	end
+
+	-- default OK, if we get here
+	return 1
+end
+
+
+
+-- helper function to remove path
+function basename(filename)
+	i = string.len(filename)
+	if i == 0 then
+		return ""
+	end
+
+	while i > 0 do
+		if string.sub(filename, i, i) == "/" then
+			break
+		end
+		i = i - 1
+	end
+	return string.sub(filename, i + 1)
+end
+
