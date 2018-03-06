@@ -77,15 +77,20 @@ string findConf() {
 /* Loads the SimFS workspace. This is general, not simulation dependent */
 int loadWorkspace(KeyValueStore &ws) {
     /* check if the workspace exists */
+    LOG(INFO, 0, std::string("SimFS workspace: ") + SIMFS_WORKSPACE + std::string("/") + SIMFS_WSNAME);
+
     if (!FileSystemHelper::folderExists(SIMFS_WORKSPACE)) {
-        if (FileSystemHelper::mkDir(SIMFS_WORKSPACE)) return 0;
+        LOG(INFO, 0, "Workspace does not exist... creating a new one!");
+        if (FileSystemHelper::mkDir(SIMFS_WORKSPACE)) {
+            LOG(ERROR, 0, "Error while creating the workspace!")
+            return 0;
+        }
     }
 
     /* load simfs general configuration */
     ws.fromFile(SIMFS_WORKSPACE + std::string("/") + SIMFS_WSNAME);
 
     return 1;
-
 }
 
 /* Saves the SimFS workspace */
@@ -145,10 +150,12 @@ void initLogger() {
     Logger::setLogKey(WARNING, -1, keynames[5], LOG_SIMPLE, ANSI_COLOR_YELLOW);
     Logger::setLogKey(PREFETCHER, -1, keynames[6], LOG_SIMPLE, ANSI_COLOR_MAGENTA);
 
+    printf("log keys: %s\n", log_keys);
+
     if (log_keys!=NULL) {
         std::string keys_str = std::string(log_keys);
         const char ** keyptr = keynames;
-
+        
 
 
         while (*keyptr!=NULL) {
@@ -209,7 +216,7 @@ int main(int argc, char * argv[]) {
 
         std::string env = argv[2];
         if (!ws.hasKey(env)) {
-            error_exit(argv[0], "This environment does not exit!");
+            error_exit(argv[0], "This environment does not exist!");
         }
         std::string conf_file = ws.getString(env) + CONF_NAME;
 
@@ -253,7 +260,7 @@ int main(int argc, char * argv[]) {
 
         /* Load env */
         if (!ws.hasKey(env)) {
-            error_exit(argv[0], "This environment does not exit!");
+            error_exit(argv[0], "This environment does not exist!");
         }
         std::string conf_file = ws.getString(env) + "/" + DIR_SIMFS + "/" + CONF_NAME;
 
