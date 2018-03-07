@@ -69,9 +69,10 @@ def data_gen(framenumber):
     global stepone
     global data 
 
-
-    if (animating or stepone or data==None): 
-        i = i + 2*simstep*direction - simstep
+    nexti = i + 2*simstep*direction - simstep
+   
+    if (nexti>=0 and (animating or stepone or data==None)): 
+        i = nexti
         data = get_data("../output/data_" + str(i))
 
     stepone = False
@@ -84,8 +85,6 @@ def data_gen(framenumber):
     surf = ax.plot_surface(xx, yy, data, cmap=cm.coolwarm, vmin=0, vmax=20)
 
     return surf
-
-
 
 
 

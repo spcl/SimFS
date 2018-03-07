@@ -50,7 +50,6 @@ void ClientFileOpenMessageHandler::serve() {
         close(socket_);
         return;
     }
-    LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename_);
     dv_->getStatsPtr()->incTotal();
 
     // client open: we need the full get from the cache to trigger all actions in case of cache miss

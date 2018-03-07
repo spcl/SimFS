@@ -16,6 +16,11 @@ OUTPUT=$output_dir
 RESTART_FILE="$$RESTARTS/restart_$$START"
 cd __SIMFS_DIR__/examples/heatequation/simulator/
 
-python simulate.py -r $$RESTART_FILE -o $$OUTPUT -i $$STOP &
+#check if the restart file exists to handle the case where we restart from 0
+if [ -f $$RESTART_FILE ]; then
+    python simulate.py -r $$RESTART_FILE -o $$OUTPUT -i $$STOP &
+else
+    python simulate.py -o $$OUTPUT -i $$STOP &
 
+fi
 

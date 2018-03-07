@@ -69,6 +69,7 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     } else cache_entry->lock();
 
     dv::id_type target_nr = dv_->getSimulatorPtr()->result2nr(filename);
+    LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename + "; nr: " + std::to_string(target_nr));
 
     if (is_miss) {
         prefetcher_.handleMiss(filename);
