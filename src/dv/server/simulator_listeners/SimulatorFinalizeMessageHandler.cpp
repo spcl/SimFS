@@ -47,7 +47,8 @@ void SimulatorFinalizeMessageHandler::serve() {
     }
 
     simjob->terminate();
-    dv_->removeJob(jobid_);
+    if (simjob->isPassive()) dv_->deindexJob(jobid_);
+    else dv_->removeJob(jobid_);
 
     close(socket_);
 }

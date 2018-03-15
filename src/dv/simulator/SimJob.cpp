@@ -34,6 +34,12 @@ SimJob::SimJob(DV *dvl_ptr, dv::id_type appid, dv::id_type target_nr,
     time_to_kill_ = dv_ptr_->getConfigPtr()->sim_kill_threshold_;
 }
 
+SimJob::SimJob(DV *dvl_ptr, dv::id_type jobid) : dv_ptr_(dvl_ptr){
+    parameters_ = std::make_unique<toolbox::KeyValueStore>();
+    setJobId(jobid);
+    is_passive_ = true;
+}
+
 std::string SimJob::getParameter(const std::string &key) const {
     return parameters_->getString(key);
 }
@@ -195,6 +201,9 @@ bool SimJob::isPrefetched() const {
 }
 
 void SimJob::prepare() {
+
+    if (is_passive_) return;
+
     std::string appid_str = std::to_string(appid_);
     std::string uid_str = dv_ptr_->getDvlJobid();
     std::string job_id_str = parameters_->getString("jobid");
@@ -286,6 +295,8 @@ void SimJob::prepare() {
 }
 
 bool SimJob::willProduceFile(const std::string &filename) const {
+    if (is_passive_) return true;
+
     dv::id_type type = dv_ptr_->getSimulatorPtr()->getResultFileType(filename);
     if (type == 0) {
         return false;
@@ -295,6 +306,8 @@ bool SimJob::willProduceFile(const std::string &filename) const {
 }
 
 bool SimJob::willProduceNr(dv::id_type nr) const {
+    if (is_passive_) return true;
+
     auto it = produced_file_numbers_.find(nr);
     if (it != produced_file_numbers_.end()) {
         return false;
@@ -304,6 +317,8 @@ bool SimJob::willProduceNr(dv::id_type nr) const {
 }
 
 bool SimJob::fileIsInSimulationRange(const std::string &filename) const {
+    if (is_passive_) return true;
+
     dv::id_type type = dv_ptr_->getSimulatorPtr()->getResultFileType(filename);
     if (type == 0) {
         return false;
@@ -313,7 +328,7 @@ bool SimJob::fileIsInSimulationRange(const std::string &filename) const {
 }
 
 bool SimJob::nrIsInSimulationRange(dv::id_type nr) const {
-    return valid_job_ && sim_start_nr_ <= nr && nr <= sim_stop_nr_;
+    return is_passive_ || (valid_job_ && sim_start_nr_ <= nr && nr <= sim_stop_nr_);
 }
 
 dv::id_type SimJob::launch() {
@@ -366,6 +381,9 @@ const std::string &SimJob::getRedirectPath_checkpoint() const {
 }
 
 bool SimJob::createRedirectFolders() {
+    /* we do not interfer when in passive mode */
+    if (isPassive()) return true;
+ 
     redirect_path_result_ = toolbox::StringHelper::joinPath(dv_ptr_->getRedirectPath(), "simjob_" + std::to_string(jobid_));
     redirect_path_checkpoint_ = toolbox::StringHelper::joinPath(redirect_path_result_, "_DV_chk_");
 
@@ -377,10 +395,16 @@ bool SimJob::createRedirectFolders() {
 }
 
 void SimJob::removeRedirectFolders() {
+    /* we do not interfer when in passive mode */
+    if (isPassive()) return;
+
     if(!redirect_path_result_.empty() && toolbox::FileSystemHelper::folderExists(redirect_path_result_)) {
         LOG(CLIENT, 1, "Removing redirect folder: " + redirect_path_result_);
         std::string command = "rm -r " + redirect_path_result_; // removes both
         system(command.c_str());
     }
 }
+
+bool SimJob::isPassive(){ return is_passive_; }
+
 }

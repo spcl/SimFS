@@ -60,6 +60,15 @@ void DV::setFileCachePtr(std::unique_ptr<FileCache> cache_ptr) {
     filecache_ptr_ = std::move(cache_ptr);
 }
 
+void DV::setPassive(){
+    passive_mode_ = true;
+}
+
+bool DV::isPassive(){
+    return passive_mode_;
+}
+
+
 
 void DV::run() {
     if (!createRedirectFolder()) {
@@ -210,6 +219,12 @@ const std::string &DV::getRedirectPath() const {
     return redirect_path_;
 }
 
+/* only index (used by the passive mode where the job is already running) */
+void DV::indexJob(dv::id_type id, std::unique_ptr<SimJob> job) {
+    simulation_jobs_[id] = std::move(job);
+}
+
+/* index & launch */
 void DV::enqueueJob(dv::id_type id, std::unique_ptr<SimJob> job) {
     simulation_jobs_[id] = std::move(job);
     jobqueue_.enqueue(simulation_jobs_[id].get());
@@ -307,6 +322,10 @@ dv::counter_type DV::getNumberOfPrefetchingJobs(dv::id_type client) {
         }
     }
     return count;
+}
+
+void DV::deindexJob(dv::id_type id) {
+    simulation_jobs_.erase(id);
 }
 
 void DV::removeJob(dv::id_type id) {

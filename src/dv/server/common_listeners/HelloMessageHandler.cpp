@@ -52,7 +52,15 @@ void HelloMessageHandler::serve() {
     //std::cout << "DV: received HELLO msg. gni_rank " << gnirank_ << " jobid " << jobid_ << std::endl;
 
     SimJob *simJob = dv_->findSimJob(jobid_);
-    if (simJob != nullptr) {
+    if (simJob != nullptr || dv_->isPassive()) {
+
+        /* we assume it's a simulator */
+        if (dv_->isPassive()){
+            std::unique_ptr<SimJob> simjob_uptr = dv_->getSimulatorPtr()->generatePassiveSimJob(jobid_);
+            simJob = simjob_uptr.get();
+            dv_->indexJob(jobid_, std::move(simjob_uptr));
+        }
+
         LOG(SIMULATOR, 1, "Hello from a simulator!");
 
         // adjust gnirank & and send message
@@ -64,6 +72,7 @@ void HelloMessageHandler::serve() {
         sendAll(reply);
 
     } else {
+        /* standard case: we assume it's a client */
         LOG(CLIENT, 1, "Hello from a client!");
 
         // register new client

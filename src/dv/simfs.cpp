@@ -33,9 +33,12 @@
 
 #define SIMFS_INIT "init"
 #define SIMFS_START "start"
-#define SIMF_LS "ls"
+#define SIMFS_START_PASSIVE "start_passive"
+#define SIMFS_LS "ls"
 #define SIMFS_INDEX "index"
 #define SIMFS_RUN "run"
+#define SIMFS_SIMULATE "simulate"
+
 
 
 #define DEFAULT_DVLIB "libdvl.so"
@@ -188,12 +191,14 @@ int main(int argc, char * argv[]) {
     initLogger();
 
     /* Parsing & checking arguments */
-    if (argc < 2) {
-        error_exit(argv[0], "A command is expected!");
+    if (argc < 3) {
+        error_exit(argv[0], "An envirorment and a command are expected!");
     }
 
 
-    std::string cmd(argv[1]);
+    std::string env(argv[1]);
+    std::string cmd(argv[2]);
+
 
 
     /* Executing commands*/
@@ -203,17 +208,17 @@ int main(int argc, char * argv[]) {
             error_exit(argv[0], "Invalid syntax. See usage.");
         }
 
-        std::string env = argv[2];
+        //std::string env = argv[2];
         std::string conf_file = argv[3];
 
         simfs::initEnvirorment(ws, env, conf_file);
 
-    } else if (cmd == SIMFS_RUN) {
+    } else if (cmd == SIMFS_RUN || cmd == SIMFS_SIMULATE) {
         if (argc<3) {
             error_exit(argv[0], "Invalid syntax. See usage.");
         }
 
-        std::string env = argv[2];
+        //std::string env = argv[2];
         if (!ws.hasKey(env)) {
             error_exit(argv[0], "This environment does not exist!");
         }
@@ -237,18 +242,17 @@ int main(int argc, char * argv[]) {
             setenv("DV_PROXY_SRV_PORT", port.c_str(), 1);
         }
 
+        if (cmd == SIMFS_SIMULATE){
+            setenv("DV_SIMULATOR", "1", 1);
+        }
         execvpe(argv[3], &(argv[3]), environ);
 
 
-    } else if (cmd == SIMFS_START) {
+    } else if (cmd == SIMFS_START || cmd == SIMFS_START_PASSIVE) {
 
         gengetopt_args_info args_info;
 
-        if (argc<3) {
-            error_exit(argv[0], "SimFS envirorment not specified!");
-        }
-
-        std::string env(argv[2]);
+        //std::string env(argv[2]);
         argv[2] = argv[0];
 
         /* Parse DV options */
@@ -276,14 +280,30 @@ int main(int argc, char * argv[]) {
         ws.setString(PORTKEY(env), port);
         simfs::saveWorkspace(ws);
 
+        if (cmd == SIMFS_START_PASSIVE) { dv->setPassive(); }
 
         dv->run();
         delete dv;
 
         cmdline_parser_free(&args_info);
+
+    } else if (cmd == SIMFS_SIMULATE) {
+        if (!ws.hasKey(env)) {
+            error_exit(argv[0], "This environment does not exist!");
+        }
+        std::string conf_file = ws.getString(env) + CONF_NAME;
+
+
+    } else if (cmd == SIMFS_LS){
+
+
+    } else if (cmd == SIMFS_INDEX){
+
+
+    } else {
+        printf("Command not recognized!\n");
+        exit(1);
     }
-
-
 
 
     /* Cleaning up */

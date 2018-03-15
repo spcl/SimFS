@@ -26,6 +26,8 @@ namespace dv {
 
 		SimJob(DV *dvl_ptr, dv::id_type appid, dv::id_type target_nr,
 			   std::unique_ptr<toolbox::KeyValueStore> parameters);
+        
+        SimJob(DV *dvl_ptr, dv::id_type jobid);
 
 		std::string getParameter(const std::string &key) const;
 		void setParameter(const std::string &key, const std::string &value);
@@ -111,6 +113,8 @@ namespace dv {
 
 		const std::string &getRedirectPath_result() const;
 		const std::string &getRedirectPath_checkpoint() const;
+    
+        bool isPassive();
 
 	protected:
 		DV *dv_ptr_;
@@ -147,6 +151,7 @@ namespace dv {
 		std::unordered_set<dv::id_type > produced_file_numbers_;
 
 		bool is_prefetched_ = false;
+        bool is_passive_ = false;
 
 		std::vector<double> taus_;
 

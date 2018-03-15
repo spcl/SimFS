@@ -244,6 +244,13 @@ std::unique_ptr<SimJob> Simulator::generateSimJobForRange(dv::id_type appid,
 }
 
 
+
+std::unique_ptr<SimJob> Simulator::generatePassiveSimJob(dv::id_type jobid) {
+    std::unique_ptr<SimJob> simjob = std::make_unique<SimJob>(dv_ptr_, jobid);
+
+    return simjob;
+}
+
 //--- alpha and taus ---------------------------------------------------
 
 void Simulator::addAlphaAndTau(double alpha, double tau) {

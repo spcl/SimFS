@@ -68,10 +68,14 @@ namespace dv {
 
 		const std::string &getRedirectPath() const;
 
+        void setPassive();
+        bool isPassive();
 
 		/**
-		 * enqueueJob() and registerClient() take ownership of the provided objects
+		 * indexJob, enqueueJob(), and registerClient() take ownership of the provided objects
 		 * (sink; see unique_ptr) and keep the objects around as long as needed.
+         * indexJob only register the job, while enqueueJob indexes and launches
+         * it (i.e., enqueue in JobQueue).
 		 *
 		 * on the other hand, the lookup functions findSimJob(), findSimulationProducingFile()
 		 * and findClientDescriptor() return raw pointers without ownership for the user.
@@ -79,6 +83,7 @@ namespace dv {
 		 * not found.
 		 */
 
+		void indexJob(dv::id_type id, std::unique_ptr<SimJob> job);
 		void enqueueJob(dv::id_type id, std::unique_ptr<SimJob> job);
 		bool isSimJobRunning(dv::id_type id) const;
 		SimJob *findSimJob(dv::id_type job_id); // not const since client may adjust simjob
@@ -109,6 +114,12 @@ namespace dv {
 		 */
 		dv::counter_type getNumberOfPrefetchingJobs(dv::id_type client);
 
+        /* deindexJob just removes the job from the index.
+         * removeJob removes it from the index and frees space in the JobQuee
+         * (it can lead to the launch of a new queued simulation).
+         */
+
+        void deindexJob(dv::id_type id);
 		void removeJob(dv::id_type id);
 
 		void registerClient(dv::id_type appid, std::unique_ptr<ClientDescriptor> client);
@@ -132,7 +143,10 @@ namespace dv {
 		std::unique_ptr<DVConfig> config_;
 		std::unique_ptr<Simulator> simulator_ptr_;
 		std::unique_ptr<FileCache> filecache_ptr_;
-
+    
+        /* if true, the server accepts all the incoming simulation requests */
+        bool passive_mode_ = false;
+        
 		toolbox::KeyValueStore statusSummary_;
 
 		std::string ip_address_;

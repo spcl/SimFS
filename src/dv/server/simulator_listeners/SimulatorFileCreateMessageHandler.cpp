@@ -49,6 +49,7 @@ SimulatorFileCreateMessageHandler::SimulatorFileCreateMessageHandler(DV *dv, int
  * - additional handling later only for files within the range of the simjob
  * - to avoid filename conflicts, also relative paths of the requested file must be considered
  *   thus: some subfolders may be generated if needed for a valid path.
+ * - no redirection is performend when in passive mode
  *
  * TODO: future option (soon):
  * - also handle create messages sent for restart/checkpoint files
@@ -117,7 +118,7 @@ void SimulatorFileCreateMessageHandler::serve() {
 
     FileDescriptor *fileDescriptor = dv_->getFileCachePtr()->internal_lookup_get(filename_);
 
-    if (fileDescriptor != nullptr) {
+    if (fileDescriptor != nullptr && !simjob->isPassive()) {
         // known file (which is valid part of a known simulator partition by definition)
         needsRedirect = fileDescriptor->isFileAvailable() || fileDescriptor->isFileUsedBySimulator();
     }
