@@ -1,5 +1,5 @@
 **Install:**
-  1) Install depenencies: cmake, clang
+  1) Install depenencies: cmake, clang, liblua
 
   2) Build DV 
     - `./build_dv.sh` to install in current_dir/build
