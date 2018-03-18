@@ -1,10 +1,11 @@
 **Install:**
+  1) Install depenencies: cmake, clang, liblua
 
-  1) Build DV 
+  2) Build DV 
     - `./build_dv.sh` to install in current_dir/build
     - `sudo ./build_dv.sh install` to install in /usr/bin
     
-  2) Build DVLib
+  3) Build DVLib
     - `./build_dvlib_x86.sh [--netcdf <netcdf path>] [--hdf5_108 <HDF5 1.8 path>] [--hdf5_110 <HDF5 1.10 path>] [--liblsb <liblsb path>]`
     - Note: need only netcdf for the heat equation example
 
