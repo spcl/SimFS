@@ -68,6 +68,14 @@ bool DV::isPassive(){
     return passive_mode_;
 }
 
+void DV::setFileIndex(toolbox::KeyValueStore * idx){
+    file_idx_ = idx;
+}
+
+void DV::indexFile(std::string filename){
+    if (file_idx_==NULL) return;
+    file_idx_->setString(filename, "1");
+}
 
 
 void DV::run() {

@@ -7,6 +7,7 @@
 #include <memory>
 #include <unistd.h>
 #include <iostream>
+#include <assert.h>
 #include "../DV.h"
 #include "../../caches/filecaches/FileCache.h"
 #include "../../caches/filecaches/FileDescriptor.h"
@@ -96,6 +97,8 @@ void SimulatorFileCloseMessageHandler::serve() {
         // note: this code path should no longer happen with the new handling of file redirection
         // that adds all valid files in production already to the waiting list during simulator_file_create
         // event handling
+        assert(0);
+
         std::string fullpath = toolbox::StringHelper::joinPath(dv_->getConfigPtr()->sim_result_path_, filename_);
         std::unique_ptr<FileDescriptor> descriptor = std::make_unique<FileDescriptor>(filename_, fullpath);
         descriptor->setFileAvailable(true);
@@ -119,6 +122,8 @@ void SimulatorFileCloseMessageHandler::serve() {
         fileDescriptor->setFileUsedBySimulator(false);
         fileDescriptor->setSize(filesize_);
         dv_->getFileCachePtr()->refresh(filename_);
+    
+        dv_->indexFile(filename_);
 
         // again a lookup since pointer may have changed in some scenarios
         // (transfer of descriptor from internal waiting list to actual cache)

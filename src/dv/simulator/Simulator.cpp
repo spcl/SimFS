@@ -244,7 +244,8 @@ std::unique_ptr<SimJob> Simulator::generateSimJobForRange(dv::id_type appid,
 }
 
 
-
+/* This type of SimJob is not initiated by SimFS but by the user. SimFS
+ * just takes note of the produced files. */
 std::unique_ptr<SimJob> Simulator::generatePassiveSimJob(dv::id_type jobid) {
     std::unique_ptr<SimJob> simjob = std::make_unique<SimJob>(dv_ptr_, jobid);
 

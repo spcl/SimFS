@@ -30,7 +30,7 @@ add_library(server ${SERVER})
 
 set(GETOPT getopt/dv_cmdline_wrapper.cpp dv.h)
 
-set(DV simfs.cpp dv.cpp dv.h DVLog.h DVBasicTypes.h DVForwardDeclarations.h ${SERVER} ${CACHES} ${SIMULATOR} ${TOOLBOX} ${GETOPT})
+set(DV SimFS.cpp SimFS.hpp SimFSEnv.cpp SimFSEnv.hpp simfs_main.cpp dv.cpp dv.h DVLog.h DVBasicTypes.h DVForwardDeclarations.h ${SERVER} ${CACHES} ${SIMULATOR} ${TOOLBOX} ${GETOPT})
 add_executable(simfs ${DV})
 target_link_libraries(simfs lua)
 target_link_libraries(simfs dl)

@@ -70,6 +70,9 @@ namespace dv {
 
         void setPassive();
         bool isPassive();
+    
+        void setFileIndex(toolbox::KeyValueStore * idx);
+        void indexFile(std::string filename);
 
 		/**
 		 * indexJob, enqueueJob(), and registerClient() take ownership of the provided objects
@@ -148,6 +151,8 @@ namespace dv {
         bool passive_mode_ = false;
         
 		toolbox::KeyValueStore statusSummary_;
+        toolbox::KeyValueStore * file_idx_ = NULL;
+        
 
 		std::string ip_address_;
 
