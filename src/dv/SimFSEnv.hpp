@@ -39,7 +39,7 @@ namespace simfs{
         SimFS fs_;
         KeyValueStore kv_;
         string path_;
-        bool is_valid_;
+        bool is_valid_=true;
            
     private:
         int init(string env_path);
