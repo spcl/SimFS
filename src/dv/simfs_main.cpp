@@ -134,6 +134,7 @@ int main(int argc, char * argv[]) {
         }
 
         /* Run! */
+        printf("Running %s!\n", argv[3]);
         execvpe(argv[3], &(argv[3]), environ);
 
 
