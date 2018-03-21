@@ -166,9 +166,10 @@ void SimJob::handleSimulatorFileClose(const std::string &name, FileDescriptor *c
         setup_duration_ = toolbox::TimeHelper::seconds(start_time_, now);
     } else {
         taus_.push_back(toolbox::TimeHelper::seconds(last_time_, now));
+        LOG(INFO, 2, std::string("Simulator ") + std::to_string(jobid_) + std::string(" new tau: ") + std::to_string(toolbox::TimeHelper::seconds(last_time_, now)));
     }
-    last_time_ = now;
 
+    last_time_ = now;
 
     produced_file_numbers_.emplace(last_nr_);
     ++files_;

@@ -50,7 +50,7 @@ void SimulatorFileCloseMessageHandler::serve() {
         return;
     }
 
-    LOG(SIMULATOR, 0, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
+    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
 
     // lookup simulation
     SimJob *simjob = dv_->findSimJob(jobid_);
@@ -171,7 +171,7 @@ void SimulatorFileCloseMessageHandler::serve() {
 
     fileDescriptor->removeAllNotificationSockets();
 
-    LOG(SIMULATOR, 1, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+    LOG(SIMULATOR, 3, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
     //std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
     //		  << client_notification_count << " clients." << std::endl;
 

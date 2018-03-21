@@ -188,7 +188,7 @@ void SimulatorFileCreateMessageHandler::serve() {
 
         }
 
-        LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+        //LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
         /*
         std::cout << "Simulation " << jobid_ << " is creating file " << filenam
         		  << " at redirected location " << fullRedirectName
@@ -200,7 +200,7 @@ void SimulatorFileCreateMessageHandler::serve() {
         reply += std::string(kMsgDelimiter) + fullRedirectName;
         sendAll(reply);
     } else {
-        LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+        //LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
         //std::cout << "Simulation " << jobid_ << " is creating file " << filename_ << std::endl;
         //std::cout << "log_create " << filename_ << std::endl;
         sendAll(kLibReplyFileCreateAck);

@@ -180,6 +180,7 @@ int main(int argc, char * argv[]) {
             dv->setFileIndex(&fileidx);
         }
     
+        printf("STARTING HERE!!!");
         dv->run();
 
         if (cmd == SIMFS_START_PASSIVE) { 
