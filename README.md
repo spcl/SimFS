@@ -1,5 +1,10 @@
+**Dependencies:**
+  - CMake
+  - Clang
+  - LibLua (>=5.3.4): https://www.lua.org/ftp/lua-5.3.4.tar.gz
+
 **Install:**
-  1) Install depenencies: cmake, clang, liblua
+  1) Install depenencies
 
   2) Build DV 
     - `./build_dv.sh` to install in current_dir/build
