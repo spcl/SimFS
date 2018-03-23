@@ -156,6 +156,7 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
     auto it = known_sims_.find(jobid);
     if (it == known_sims_.end()) {
         // unknown
+        LOG(CLIENT, 1, "Simulation is *NOT* known, adding it to the known ones!");
         known_sims_.emplace(jobid);
         sim_profiler_.addAlpha(simjob->getSetupDuration());
 
@@ -170,6 +171,7 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
 
     } else {
         // known: register the tau
+        LOG(CLIENT, 1, "Simulation is known");
         sim_profiler_.newTau();
     }
 
