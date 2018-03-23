@@ -195,7 +195,6 @@ int main(int argc, char * argv[]) {
 
     std::string cmd(argv[1]);
 
-
     /* Executing commands*/
     if (cmd == SIMFS_INIT) {
 
