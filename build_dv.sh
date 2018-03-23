@@ -24,9 +24,13 @@ if [ -z "$LUA_PATH" ]; then
     LUA_PATH=$current_path/lua
 fi
 
-export LUA_LIB_PATH=$LUA_PATH/lib
-export LUA_INCLUDE_PATH=$LUA_PATH/include
+if [ -z "$LUA_LIB_PATH" ]; then
+    export LUA_LIB_PATH=$LUA_PATH/lib
+fi;
 
+if [ -z "$LUA_INCLUDE_PATH" ]; then
+    export LUA_INCLUDE_PATH=$LUA_PATH/include
+fi;
 
 echo "Compiling SimFS ($code_source_path -> $build_path)"
 cd $build_path
