@@ -48,9 +48,9 @@ void SimulatorFinalizeMessageHandler::serve() {
 
     std::vector<double> taus = simjob->getTaus();
 
-    for (double tau : taus){
+    /*for (double tau : taus){
         printf("%li TAU %lf\n", jobid_, tau);
-    }
+    }*/
    
     simjob->terminate();
     if (simjob->isPassive()) dv_->deindexJob(jobid_);

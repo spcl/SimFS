@@ -71,9 +71,16 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     dv::id_type target_nr = dv_->getSimulatorPtr()->result2nr(filename);
     LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename + "; nr: " + std::to_string(target_nr));
 
-    if (is_miss) {
-        prefetcher_.handleMiss(filename);
 
+    if (is_miss) { prefetcher_.handleMiss(filename); }
+
+    /* Check again because the prefetch context could have fired a simulation
+     * covering this file */
+    already_simulating_job = dv_->findSimulationProducingFile(filename);
+    is_being_simulated = already_simulating_job != nullptr;
+    is_miss = cache_entry == nullptr && !is_being_simulated;
+
+    if (is_miss) {
         //logs & stats
         dv_->getStatsPtr()->incMisses();
         LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
@@ -156,9 +163,11 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
     auto it = known_sims_.find(jobid);
     if (it == known_sims_.end()) {
         // unknown
-        LOG(CLIENT, 1, "Simulation is *NOT* known, adding it to the known ones!");
+        //LOG(CLIENT, 1, "Simulation is *NOT* known, adding it to the known ones!");
         known_sims_.emplace(jobid);
         sim_profiler_.addAlpha(simjob->getSetupDuration());
+    
+        printf("SIMULATION NOT KNOW! Adding alpha: %lf\n", simjob->getSetupDuration());
 
         // this does not happen when prefetching is going, so it's
         // safe to get the taus from the simulator history.
@@ -171,7 +180,7 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
 
     } else {
         // known: register the tau
-        LOG(CLIENT, 1, "Simulation is known");
+        //LOG(CLIENT, 1, "Simulation is known");
         sim_profiler_.newTau();
     }
 

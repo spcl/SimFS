@@ -1,6 +1,6 @@
 import sys, argparse
 import solver
-
+import os
 
 solver = solver.solver()
 parser = argparse.ArgumentParser()
@@ -25,6 +25,8 @@ solver.result_dir = args.outputdir
 
 if (args.restartfile!=""): solver.restart(args.restartfile)
 
-solver.compute(args.endat)
+sleep=os.getenv("HEAT_SLEEP", 1)
+
+solver.compute(args.endat, sleep)
 
 

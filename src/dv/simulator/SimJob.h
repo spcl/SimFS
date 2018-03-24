@@ -80,6 +80,8 @@ namespace dv {
 
         bool hasToBeKilled();
 
+        double getLastTau(); 
+
 		void terminate();
 
 		/**

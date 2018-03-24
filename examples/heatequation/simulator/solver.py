@@ -1,6 +1,7 @@
 #Python port of http://www.tonysaad.net/code/two-dimensional-heat-equation-in-c/
 
 from netCDF4 import Dataset
+import time
 
 
 class heatstep:    
@@ -69,7 +70,7 @@ class solver:
         self.grid, self.current_it = self.load_from_disk(restartfile)
 
 
-    def compute(self, stop_iteration):
+    def compute(self, stop_iteration, sleep=0):
 
         res = []
 
@@ -78,6 +79,8 @@ class solver:
         while (self.current_it<=stop_iteration):
             self.compute_step()    
             res.append(heatstep(self.current_it, self.get_filename()))
+            time.sleep(sleep)
+
 
         if (len(res)==0):
             print "ERROR: " + str(self.current_it) + "; " + str(stop_iteration)

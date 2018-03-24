@@ -28,6 +28,13 @@ PrefetchContext::PrefetchContext(ClientDescriptor * client, dv::id_type appid) :
 
 void PrefetchContext::handleMiss(const std::string &filename){
     parsims_ = 1;
+
+    /* we keep checking because the prefetchcontext could be still valid. 
+     * E.g., the restart interval I is smaller than the stride S. 
+     * Now assume that we are at the first simulation (prefetcher did not fire
+     * any simulation yet). The next access will be again a miss because
+     * the first simulation ended before, but still the prefetch context
+     * could be valid (i.e., same stride). */
     check_for_prefetch(filename);
 }
 

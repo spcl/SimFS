@@ -166,7 +166,7 @@ void SimJob::handleSimulatorFileClose(const std::string &name, FileDescriptor *c
         setup_duration_ = toolbox::TimeHelper::seconds(start_time_, now);
     } else {
         taus_.push_back(toolbox::TimeHelper::seconds(last_time_, now));
-        LOG(INFO, 2, std::string("Simulator ") + std::to_string(jobid_) + std::string(" new tau: ") + std::to_string(toolbox::TimeHelper::seconds(last_time_, now)));
+        //LOG(INFO, 2, std::string("Simulator ") + std::to_string(jobid_) + std::string(" new tau: ") + std::to_string(toolbox::TimeHelper::seconds(last_time_, now)));
     }
 
     last_time_ = now;
@@ -176,6 +176,11 @@ void SimJob::handleSimulatorFileClose(const std::string &name, FileDescriptor *c
     if (cache_entry->isFilePrefetched()) {
         is_prefetched_ = true;
     }
+}
+
+double SimJob::getLastTau() {
+    if (taus_.size()==0) return -1;
+    return taus_.back();
 }
 
 void SimJob::terminate() {

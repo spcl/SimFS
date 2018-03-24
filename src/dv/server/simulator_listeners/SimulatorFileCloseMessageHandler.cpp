@@ -50,7 +50,6 @@ void SimulatorFileCloseMessageHandler::serve() {
         return;
     }
 
-    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
 
     // lookup simulation
     SimJob *simjob = dv_->findSimJob(jobid_);
@@ -145,6 +144,10 @@ void SimulatorFileCloseMessageHandler::serve() {
 
     //std::cout << "   Job recognized. Handling fopen in simulations." << std::endl;
     simjob->handleSimulatorFileClose(filename_, fileDescriptor);
+
+
+    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()));
+
 
     //printf("filedescriptor: %p\n", fileDescriptor);
 
