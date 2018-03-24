@@ -26,8 +26,41 @@ PrefetchContext::PrefetchContext(ClientDescriptor * client, dv::id_type appid) :
 }
 
 
-void PrefetchContext::handleMiss(const std::string &filename){
+void PrefetchContext::handleMiss(dv::id_type target_nr, std::string parameters){
     parsims_ = 1;
+
+
+    /* extend the simulation interval according to the prefetcher:
+     *  MISSING - EXTEND_LEFT -> MISSING + EXTEND_RIGHT
+     *  At most one of the two extend_* is !=0:
+     *   FW trajectory: extend_left; BW trajectory: extend_right;
+     *  This is needed because if stride > restart interval then 
+     *  the prefetcher never gets a chance to activate since it does
+     *  not have taus.
+     */
+    dv::id_type stride = getStride();
+    dv::id_type extend_left = stride<0 ? -stride : 0;
+    dv::id_type extend_right = stride>0 ? stride : 0;
+
+    std::unique_ptr<SimJob> simjob = client_->newSimulation(target_nr - extend_left, target_nr + extend_right, parameters);
+
+    if (simjob==nullptr){
+        LOG(ERROR, 0, "Unable to create a simulation to serve this miss!");
+        return;
+    }
+
+    
+
+    if (stride>=0) {
+        last_nr_ = simjob->getSimStop();
+        std::cout << "Target nr: " << target_nr << "; extend_right: " << extend_right << "; last_nr: " << last_nr_ << std::endl;
+    }else{
+        last_nr_ = simjob->getSimStart();
+    }
+
+    dv::id_type simjobid = simjob->getJobId();
+    dv_->enqueueJob(simjobid, std::move(simjob));
+    
 
     /* we keep checking because the prefetchcontext could be still valid. 
      * E.g., the restart interval I is smaller than the stride S. 
@@ -35,18 +68,15 @@ void PrefetchContext::handleMiss(const std::string &filename){
      * any simulation yet). The next access will be again a miss because
      * the first simulation ended before, but still the prefetch context
      * could be valid (i.e., same stride). */
-    check_for_prefetch(filename);
+    check_for_prefetch(target_nr);
 }
 
 
-void PrefetchContext::handleHit(const std::string &filename){
-    check_for_prefetch(filename);
+void PrefetchContext::handleHit(dv::id_type target_nr, std::string parameters){
+    check_for_prefetch(target_nr);
 }
 
-void PrefetchContext::check_for_prefetch(const std::string &filename) {
-
-    dv::id_type nr = dv_->getSimulatorPtr()->result2nr(filename);
-
+void PrefetchContext::check_for_prefetch(dv::id_type nr) {
 
     dv::id_type newstride = nr - last_access_;
     last_access_ = nr;
@@ -74,7 +104,6 @@ void PrefetchContext::check_for_prefetch(const std::string &filename) {
                 "; expected: " + std::to_string(stride_));
             return;
         }
-
 
         if (stride_>0) forward_prefetch(nr);
         else backward_prefetch(nr);
@@ -125,8 +154,15 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
                 "nextcheckpoint: " + \
                 std::to_string(dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_ + simlen)));
 
-            client_->newSimulation(last_nr_, last_nr_ + simlen, "");
-            last_nr_ = dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_ + simlen);
+            dv::id_type start_from = dv_->getSimulatorPtr()->getNextCheckpointNr(last_nr_);
+            std::unique_ptr<SimJob> simjob = client_->newSimulation(start_from, last_nr_ + simlen, "");
+            if (simjob==NULL){
+                LOG(WARNING, 0, "Cannot create prefetch simulation!");
+            }else{
+                last_nr_ = simjob->getSimStop();
+                dv::id_type simjobid = simjob->getJobId();
+                dv_->enqueueJob(simjobid, std::move(simjob));
+            }
         }
 
         dv::id_type max_parsims = dv_->getConfigPtr()->dv_max_vertical_prefetching_intervals_;

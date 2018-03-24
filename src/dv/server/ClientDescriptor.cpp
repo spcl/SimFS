@@ -72,35 +72,21 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename + "; nr: " + std::to_string(target_nr));
 
 
-    if (is_miss) { prefetcher_.handleMiss(filename); }
+    if (is_miss) { 
 
-    /* Check again because the prefetch context could have fired a simulation
-     * covering this file */
-    already_simulating_job = dv_->findSimulationProducingFile(filename);
-    is_being_simulated = already_simulating_job != nullptr;
-    is_miss = cache_entry == nullptr && !is_being_simulated;
+        LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
 
-    if (is_miss) {
+        /* prefetcher is in charge to restart the simulation */
+        prefetcher_.handleMiss(target_nr, parameters[0]); 
+
         //logs & stats
         dv_->getStatsPtr()->incMisses();
-        LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
     
-        /* extend the simulation interval according to the prefetcher:
-        *  MISSING - EXTEND_LEFT -> MISSING + EXTEND_RIGHT
-        *  At most one of the two extend_* is !=0:
-        *   FW trajectory: extend_left; BW trajectory: extend_right;
-        */
-        dv::id_type stride = prefetcher_.getStride();
-        dv::id_type extend_left = stride<0 ? -stride : 0;
-        dv::id_type extend_right = stride>0 ? stride : 0;
-
-        newSimulation(target_nr - extend_left, target_nr + extend_right, parameters[0]);
-
         return false;
+    } else { 
 
-    } else {
-        prefetcher_.handleHit(filename);
-
+        prefetcher_.handleHit(target_nr, parameters[0]);
+ 
         if (is_being_simulated) {
             /* there is a simulation that will produce this file */
             //dv::id_type waiting_time = requested_nr - already_simulating_job->getCurrentNr();
@@ -126,12 +112,12 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     //		  << " open " << openop_
     //		  << " " << cli_profiler_.rstring()
     //		  << " " << sim_profiler_.rstring() << std::endl;
-    openop_++;
+    //openop_++;
 
 }
 
 
-bool ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams) {
+std::unique_ptr<SimJob> ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams) {
     //create job parameters
     std::unique_ptr<toolbox::KeyValueStore> jobparameters = std::make_unique<toolbox::KeyValueStore>();
     jobparameters->fromString(strparams);
@@ -148,13 +134,13 @@ bool ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop,
 
         LOG(CLIENT, 0, "New simulation: ID: " + std::to_string(simjobid) + " range: " + std::to_string(simjob->getSimStart()) + " -> " + std::to_string(simjob->getSimStop()));
 
-        dv_->enqueueJob(simjobid, std::move(simjob));
+        //dv_->enqueueJob(simjobid, std::move(simjob));
         // do not access simjob after this point againA
         //LOG(CLIENT, 1, "Simulation added to queue with id " + std::to_string(simjobid));
-        return true;
+        return simjob;
     } else {
         LOG(WARNING, 0, "Simulation non needed or not possible (invalid simjob)!");
-        return false;
+        return nullptr;
     }
 }
 
