@@ -58,9 +58,9 @@ optional_dv_prefetch_all_files_at_once = 0
 cosmo_sim_start="20061001000000"
 
 -- strings
-sim_config_path = "/scratch/snx3000/salvodg/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/2_lm_f/"
-sim_checkpoint_path = "/scratch/snx3000/salvodg/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/2_lm_f/restarts/"
-sim_result_path = "/scratch/snx3000/salvodg/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/output/lm_c/"
+sim_config_path = "/scratch/snx3000/salvodg/salvo/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/2_lm_f/"
+sim_checkpoint_path = "/scratch/snx3000/salvodg/salvo/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/2_lm_f/restarts/"
+sim_result_path = "/scratch/snx3000/salvodg/salvo/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/output/lm_c/"
 sim_temporary_redirect_path = "/scratch/snx3000/salvodg/tmp/"
 
 
@@ -90,7 +90,7 @@ optional_sim_max_nr = 0
 -- file cache ------------------------------------------------------------------
 
 -- string: unlimited LRU ARC LIRS BCL DCL PLRU PBCL PDCL
-filecache_type = "DCL"
+filecache_type = "unlimited"
 
 -- int > 0
 filecache_size = 1000
