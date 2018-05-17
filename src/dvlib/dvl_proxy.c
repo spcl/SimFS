@@ -31,7 +31,7 @@
 #define INVALID_IP -2
 #define CONNECTION_ERROR -3
 
-#define CONN_TRIES 2
+#define CONN_TRIES 1
 char * jobid;
 int sockfd=0;
 
