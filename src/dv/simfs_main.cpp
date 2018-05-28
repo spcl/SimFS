@@ -1,7 +1,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+#include <sstream>
+#include <string.h>
 #include "config.h"
 
 #include "getopt/dv_cmdline.h"
@@ -9,6 +10,16 @@
 #include "dv.h"
 #include "SimFS.hpp"
 #include "SimFSEnv.hpp"
+#include "toolbox/StringHelper.h"
+
+/* AF_INET socket stuff */
+#include <arpa/inet.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+
+
+#define ADDRESS_DELIM ","
 
 using namespace dv;
 using namespace toolbox;
@@ -58,6 +69,46 @@ void initLogger() {
     }
 }
 
+std::string findWorkingAddress(const std::string addresses, const std::string port){
+   
+    struct sockaddr_in srv_addr;
+    uint16_t srv_port = htons(atoi(port.c_str()));
+    
+    std::vector<std::string> address_vec;
+    StringHelper::splitStr(&address_vec, addresses, ADDRESS_DELIM);
+
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    
+    for (auto it = address_vec.begin(); it != address_vec.end(); ++it){
+
+        if (*it == "") continue; 
+        const char * srv_ip = (*it).c_str();
+        
+        memset(&srv_addr, '0', sizeof(srv_addr));
+        srv_addr.sin_family = AF_INET;
+        srv_addr.sin_port = srv_port;
+        int res = inet_pton(AF_INET, srv_ip, &srv_addr.sin_addr);
+
+        if (res<=0) {
+            sockfd=0;
+            printf("%s is an invalid IP address\n", srv_ip);
+        }else{
+
+            printf("Connecting to %s:%s\n", srv_ip, port.c_str());
+            res = -1;
+            res = connect(sockfd, (struct sockaddr *)&srv_addr, sizeof(srv_addr));
+            if (res<0) {
+                printf("Cannot connect to: %i (%i)\n", res, res);
+                perror("Error");
+            }else{
+                close(sockfd);
+                printf("Found a DV listening on: %s\n", srv_ip);
+                return *it;
+            }
+        }
+    }
+    return "";
+}
 
 
 int main(int argc, char * argv[]) {
@@ -122,9 +173,13 @@ int main(int argc, char * argv[]) {
         simfs_env_addr_t addr;
         if (!env.getLastKnownAddress(&addr)){
 
-            printf("DV should be listening on %s:%s\n", addr.ip.c_str(), addr.port.c_str());
+            printf("Candidate IPs for DV: %s; port: %s\n", addr.ip.c_str(), addr.port.c_str());
 
-            setenv("DV_PROXY_SRV_IP", addr.ip.c_str(), 1);
+            std::string dv_working_ip = findWorkingAddress(addr.ip, addr.port);
+
+            if (dv_working_ip=="") return -1;
+
+            setenv("DV_PROXY_SRV_IP", dv_working_ip.c_str(), 1);
             setenv("DV_PROXY_SRV_PORT", addr.port.c_str(), 1);
         }
 
