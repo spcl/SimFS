@@ -19,11 +19,16 @@ int nc_open(char *path, int omode, int * ncidp){
     return _dvl_nc_open(path, omode, ncidp, original);
 }
 
+int nc__open(char *path, int omode, size_t *chunksizehintp, int *ncidp){
+    //FIXME: redirect to nc__open instead of nc_open
+    onc_open_t original = dlsym(RTLD_NEXT, "nc_open");
+    return _dvl_nc_open(path, omode, ncidp, original);
+}
+
 int nc_create(char *path, int cmode, int * ncidp){
     onc_create_t original = dlsym(RTLD_NEXT, "nc_create");
     return dvl_nc_create(path, cmode, ncidp, original);
 }
-
 
 
 int nc_get_vara(int ncid, int varid, const size_t start[], const size_t count[], const void * valuesp){

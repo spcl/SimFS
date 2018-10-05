@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #ifdef __NCMPI__
 #include <mpi.h>
@@ -246,9 +247,10 @@ int dvl_init(){
 
 
     atexit(dvl_finalize);
+    signal(SIGINT, dvl_sig_finalize);
+    signal(SIGTERM, dvl_sig_finalize);
 
-
-    printf("Init data structures\n");
+    //printf("Init data structures\n");
 
     /* initialize free file structures */
 #ifdef __MT__
@@ -355,7 +357,11 @@ uint32_t dvl_get_current_rank() {
 }
 #endif
 
-void dvl_finalize(){
+void dvl_sig_finalize(int signo){
+    dvl_finalize();
+}
+
+void dvl_finalize(void){
     char buff[BUFFER_SIZE]; 
     int msgsize = BUFFER_SIZE;
 
@@ -421,7 +427,7 @@ char * is_result_file_COSMO(const char * path, char * npath){
     if (strlen(npath) >= rplen && !strncmp(npath, dvl.respath, rplen)){
         return npath + rplen; /* relapath return null-termianted string */
     }
-    DVLPRINT("returning NULL!!!\n");
+    DVLPRINT("returning NULL -> %s is not a result file!\n", path);
 
     return NULL; 
 }
@@ -441,7 +447,7 @@ char * is_checkpoint_file_COSMO(const char * path, char * npath){
     if (strlen(npath) >= rplen && !strncmp(npath, dvl.checkpoint_path, rplen)){
         return npath + rplen; /* relapath return null-termianted string */
     }
-    DVLPRINT("returning NULL!!!\n");
+    DVLPRINT("returning NULL -> %s is not a checkpoint file!\n", path);
 
     return NULL; 
 }

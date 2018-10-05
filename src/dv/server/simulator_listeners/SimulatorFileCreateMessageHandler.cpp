@@ -11,6 +11,7 @@
 
 #include "../../toolbox/FileSystemHelper.h"
 #include "../../toolbox/StringHelper.h"
+#include "../../toolbox/TimeHelper.h"
 
 namespace dv {
 
@@ -158,6 +159,11 @@ void SimulatorFileCreateMessageHandler::serve() {
                 std::cout << "   file was not asked for: ignore" << std::endl;
             }
         }
+
+        toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+        double time = toolbox::TimeHelper::seconds(dv_->start_time_, now);
+        LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " starts creating file " + filename_ + "; time: " + std::to_string(time));
+
     } else {
         if (dv_->getConfigPtr()->dv_debug_output_on_) {
             std::cout << "   ignore this file type" << std::endl;

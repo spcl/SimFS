@@ -29,6 +29,7 @@
 // shared
 int dvl_init(void);
 void dvl_finalize(void);
+void dvl_sig_finalize(int signo);
 
 #ifdef __MT__
 uint32_t dvl_get_current_rank(void);

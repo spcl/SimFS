@@ -86,7 +86,7 @@ int dvl_srv_connect(){
     	        if (res<0) {
                     DVLPRINT("Error while connecting: %i (%i/%i)\n", res, tries+1, CONN_TRIES);
                     tries++;
-                    sleep(3*(tries+1));
+                    //sleep(3*(tries+1));
                 }else{ 
                     srv_last_ip = srv_ip;
                 }

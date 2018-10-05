@@ -47,11 +47,11 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
 #endif
         HASH_FIND_INT(dvl.open_files_idx, &id, dfile);
         if (dfile == NULL) {
-            fprintf(stderr, "ERROR: client has tried to close a file that was not open. Returning NC_EBADID.\n");
+            fprintf(stderr, "Warning: client is closing a file (id: %i) that was not open by DVLIB. Trying to close it with netcdf (hint: opening/creating function may have not been intercepted!).\n", id);
 #ifdef __MT__
             pthread_rwlock_unlock(&dvl.open_files_lock);
 #endif
-            return NC_EBADID;            
+            return (*onc_close)(id);     
         }
 
 

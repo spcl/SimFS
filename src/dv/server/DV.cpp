@@ -27,6 +27,7 @@
 #include "../toolbox/FileSystemHelper.h"
 #include "../toolbox/TimeHelper.h"
 #include "../toolbox/NetworkHelper.h"
+#include "../toolbox/TimeHelper.h"
 
 
 namespace dv {
@@ -91,7 +92,7 @@ void DV::run() {
 
     std::string delimiter(":");
 
-
+    start_time_ = toolbox::TimeHelper::now();
 
     while (!config_->stop_requested_predicate_() && !quit_requested_) {
         FD_ZERO(&read_fds);

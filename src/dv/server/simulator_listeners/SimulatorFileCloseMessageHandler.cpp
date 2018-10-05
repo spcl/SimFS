@@ -13,6 +13,8 @@
 #include "../../caches/filecaches/FileDescriptor.h"
 #include "../../simulator/Simulator.h"
 #include "../../toolbox/StringHelper.h"
+#include "../../toolbox/TimeHelper.h"
+
 
 namespace dv {
 
@@ -145,8 +147,11 @@ void SimulatorFileCloseMessageHandler::serve() {
     //std::cout << "   Job recognized. Handling fopen in simulations." << std::endl;
     simjob->handleSimulatorFileClose(filename_, fileDescriptor);
 
+    toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+    double time = toolbox::TimeHelper::seconds(dv_->start_time_, now);
+    //LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()));
+    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()) + "; time: " + std::to_string(time));
 
-    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()));
 
 
     //printf("filedescriptor: %p\n", fileDescriptor);

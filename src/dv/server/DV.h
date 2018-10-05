@@ -20,8 +20,9 @@
 #include "../caches/filecaches/FileCache.h"
 #include "../simulator/Simulator.h"
 #include "../simulator/SimJob.h"
-
 #include "../DVLog.h"
+#include "../toolbox/StatisticsHelper.h"
+
 
 #define ERROR 0
 #define INFO 1
@@ -38,6 +39,8 @@ namespace dv {
 	public:
 		static constexpr int kListenBacklog = 4; // used for each listening socket, may be adjusted
 		static constexpr int kMaxBufferLen = 4096;
+
+        toolbox::TimeHelper::time_point_type start_time_;
 
 		DV(std::unique_ptr<DVConfig> config);
 

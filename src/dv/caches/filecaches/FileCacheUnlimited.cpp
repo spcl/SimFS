@@ -33,7 +33,7 @@ void FileCacheUnlimited::initializeWithFiles() {
             size = 0;
         }
         fd->setSize(size);
-        this->put(name, std::move(fd));
+        this->put(rel_path, std::move(fd));
     };
 
     toolbox::FileSystemHelper::readDir(dv_ptr_->getConfigPtr()->sim_result_path_,
