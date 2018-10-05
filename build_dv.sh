@@ -20,16 +20,17 @@ mkdir -p $build_path
 mkdir -p $workspace_path
 
 
+echo $LUA_PATH
 if [ -z "$LUA_PATH" ]; then
     LUA_PATH=$current_path/lua
 fi
 
 if [ -z "$LUA_LIB_PATH" ]; then
-    export LUA_LIB_PATH=$LUA_PATH/lib
+    export LUA_LIB_PATH=$LUA_PATH/
 fi;
 
 if [ -z "$LUA_INCLUDE_PATH" ]; then
-    export LUA_INCLUDE_PATH=$LUA_PATH/include
+    export LUA_INCLUDE_PATH=$LUA_PATH/
 fi;
 
 echo "Compiling SimFS ($code_source_path -> $build_path)"
