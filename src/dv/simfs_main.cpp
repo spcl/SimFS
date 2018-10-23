@@ -11,6 +11,7 @@
 #include "SimFS.hpp"
 #include "SimFSEnv.hpp"
 #include "toolbox/StringHelper.h"
+#include "toolbox/FileSystemHelper.h" 
 
 /* AF_INET socket stuff */
 #include <arpa/inet.h> 
@@ -139,7 +140,6 @@ int main(int argc, char * argv[]) {
     std::string envname(argv[1]);
     std::string cmd(argv[2]);
 
-
     /* Executing commands*/
     if (cmd == SIMFS_INIT) {
 
@@ -206,10 +206,10 @@ int main(int argc, char * argv[]) {
             error_exit(argv[0], "Error while parsing command line arguments");
         }
 
-        /* Load env */
+        /* load env */
         SimFSEnv env(fs, envname);
         if (!env.isValid()){
-            error_exit(argv[0], "Error while initializing the environment!");
+            error_exit(argv[0], "error while initializing the environment!");
         }   
                 
         /* Create DV (server) */
@@ -250,6 +250,62 @@ int main(int argc, char * argv[]) {
 
 
     } else if (cmd == SIMFS_INDEX){
+        
+        /* load env */
+        SimFSEnv env(fs, envname);
+        if (!env.isValid()){
+            error_exit(argv[0], "error while initializing the environment!");
+        }   
+
+        //get filename (cannot get realpath here since it may not exist)
+        std::string file = argv[3];
+
+        //get absolute path
+        std::string dirname = FileSystemHelper::getDirname(file);
+        std::string filename = FileSystemHelper::getBasename(file);
+
+        KeyValueStore fileidx;
+        env.loadFiles(&fileidx);
+        
+        //get env output path
+        DVConfig dvconf;
+        if (!dvconf.loadConfigFile(env.getConfigFile())){
+            error_exit(argv[0], "Cannot read the config file " + env.getConfigFile());
+        }
+
+        if (!dvconf.init()){
+            error_exit(argv[0], "Configuration is invalid (file: " + env.getConfigFile() + ")");
+        }       
+
+        std::string env_output = FileSystemHelper::getRealPath(dvconf.sim_result_path_);       
+        std::cout << "file: " << file<< "; dir: " << dirname << "; env output: " << env_output << std::endl;
+        
+
+        if (!dirname.compare(0, env_output.size(), env_output)){
+             
+            std::string reldir = dirname.substr(env_output.length());
+            bool file_exists = FileSystemHelper::fileExists(file);
+
+            std::string filename_idx = reldir + "/" + filename;
+            std::cout << "indexing file " << filename_idx << "; exists: " << file_exists << std::endl;
+
+            fileidx.setString(filename_idx, file_exists ? "1" : "0");
+            if (!env.saveFiles(&fileidx)){
+                error_exit(argv[0], "Error while saving the index!\n");
+            }        
+
+        }else{
+            std::cout << "This file is not in the output directory of this environment! (directory of the file: " << dirname << ";  env. output dir: " << env_output << std::endl;
+        }
+
+    
+        //check if path is output path as well
+        
+        //save file in idx
+
+        //save idx            
+
+
         /*
         simfs::simfs_env_t env;
         KeyValueStore fileidx;

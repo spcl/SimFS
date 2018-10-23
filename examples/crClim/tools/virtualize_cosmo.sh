@@ -68,8 +68,8 @@ mkdir $tmp_dir > /dev/null 2>/dev/null
 #sed -e "s?ydir='\([a-zA-Z0-9./_]*\)'?ydir='../../\1'?g" -e "s?ydirini='\([a-zA-Z0-9./_]*\)'?ydirini='../../\1'?g" -e "s?ydirbd='\([a-zA-Z0-9./_]*\)'?ydirbd='../../\1'?g" $input_io > $input_io_template
 sed -e "s?ydir='\([a-zA-Z0-9./_]*\)'?ydir='${results}/\1'?g" -e "s?ydirini='\([a-zA-Z0-9./_]*\)'?ydirini='${sim_input}/\1'?g" -e "s?ydirbd='\([a-zA-Z0-9./_]*\)'?ydirbd='${sim_bc}/\1'?g" $input_io > $input_io_template
 
+sed -e "s/hstart[ ]*=[ ]*[0-9]*/hstart=__START__/" -e "s/hstop[ ]*=[ ]*[0-9]*/hstop=__STOP__/" INPUT_ORG $input_org > $input_org_template
 
-cp $input_org $input_org_template
 
 cat > $path/job << EOF_JOB
 #!/bin/tcsh

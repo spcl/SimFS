@@ -90,8 +90,8 @@ int SimFSEnv::loadFiles(KeyValueStore * files){
 }
 
 int SimFSEnv::saveFiles(KeyValueStore * files){
-    files->toFile(getKVFile());
-    return 0;
+    printf("saving in %s\n", getKVFile().c_str());
+    return files->toFile(getKVFile());
 }
 
 void SimFSEnv::save(){

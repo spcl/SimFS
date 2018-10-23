@@ -90,6 +90,12 @@ namespace toolbox {
 
 
 		/**
+		 * @return file realpath
+		 */
+        static std::string getRealPath(const std::string &path);
+
+
+		/**
 		 * @return file basename of path
 		 */
 		static std::string getBasename(const std::string &path);
