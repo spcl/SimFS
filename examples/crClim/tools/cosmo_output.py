@@ -14,7 +14,7 @@ nml_org = f90nml.read(ipath + "/INPUT_ORG")
 
 
 start_date_str = nml_org["RUNCTL"]["ydate_ini"]
-start_date = datetime.strptime(start_date_str, "%Y%m%d%H")
+start_date = datetime.strptime(start_date_str, "%Y%m%d%H%M%S")
 timestep = nml_org["RUNCTL"]["dt"]
 
 gribout = nml_io["gribout"]
@@ -48,7 +48,7 @@ for out in gribout:
     if (out["ytunit"] == "d"):
     
         while(grib_current <= grib_stop):
-            print("%s/lff%s%s.nc" %(gribpath, out["ytunit"], grib_current.strftime("%Y%m%d%H")))
+            print("%s/lff%s%s.nc" %(gribpath, out["ytunit"], grib_current.strftime("%Y%m%d%H%M%S")))
             grib_current = grib_current + grib_incr
     elif (out["ytunit"] == "f"):
                

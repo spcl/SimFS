@@ -16,11 +16,13 @@ mkdir -p $$LOG_DIR
 cd $$EXE_DIR/
 
 mkdir -p runs/$$simdir >/dev/null 2>/dev/null
-cp * runs/$$simdir 2>/dev/null
+cp INPUT_* runs/$$simdir 2>/dev/null
+cp job runs/$$simdir 2>/dev/null
 
 cd runs/$$simdir
 
 sed -e "s/__START__/$$SIMSTART/g" -e "s/__STOP__/$$SIMSTOP/g" INPUT_ORG_TEMPLATE > INPUT_ORG
+cp INPUT_IO_TEMPLATE INPUT_IO
 #sed -e "s/ydir='.\/output/ydir='..\/..\/..\/output/g" -e "s/ydirini='.\/input/ydirini='..\/..\/..\/input/g" -e "s/ydirbd='.\/bc/ydirbd='..\/..\/..\/bc/g" INPUT_IO_TEMPLATE > INPUT_IO
 
 sbatch job > $$LOG_DIR/cosmo.$${DV_JOBID}.out 2> $$LOG_DIR/cosmo.$${DV_JOBID}.err &

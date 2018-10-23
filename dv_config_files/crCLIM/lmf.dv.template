@@ -76,7 +76,7 @@ sim_parameter_template_file = ""
 sim_parameter_output_file = ""
 
 sim_job_template_style = 2
-sim_job_template_file = "/users/salvodg/SimFS/templates/crCLIM/lmf_template.job"
+sim_job_template_file = "?JOB_TEMPLATE"
 sim_job_output_file = "simjob_UID_APPID_JOBID.job"
 
 -- int
