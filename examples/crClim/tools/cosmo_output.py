@@ -3,11 +3,12 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-if (len(sys.argv)!= 2):
-    print("Usage: %s <INPUT_* path>\n" % (sys.argv[0])) 
+if (len(sys.argv)!= 3):
+    print("Usage: %s <INPUT_* path> <output prefix>\n" % (sys.argv[0])) 
     exit(1)
 
 ipath = sys.argv[1]
+outprefix = sys.argv[2]
 
 nml_io = f90nml.read(ipath + "/INPUT_IO")
 nml_org = f90nml.read(ipath + "/INPUT_ORG")
@@ -28,7 +29,9 @@ for out in gribout:
     #print(out["ytunit"])
 
     
-    gribpath = os.path.abspath(ipath + out["ydir"])
+    #gribpath = os.path.abspath(ipath + out["ydir"])
+    gribpath = os.path.abspath(outprefix + out["ydir"])
+
 
     if ("hcomb" in out):
         grib_current = start_date + timedelta(hours = out["hcomb"][0])

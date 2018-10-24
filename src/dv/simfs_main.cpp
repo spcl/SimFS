@@ -248,6 +248,45 @@ int main(int argc, char * argv[]) {
 
     } else if (cmd == SIMFS_LS){
 
+        SimFSEnv env(fs, envname);
+        if (!env.isValid()){
+            error_exit(argv[0], "error while initializing the environment!");
+        }   
+
+        KeyValueStore fileidx;
+        env.loadFiles(&fileidx);
+        
+        //get env output path
+        DVConfig dvconf;
+        if (!dvconf.loadConfigFile(env.getConfigFile())){
+            error_exit(argv[0], "Cannot read the config file " + env.getConfigFile());
+        }
+
+        if (!dvconf.init()){
+            error_exit(argv[0], "Configuration is invalid (file: " + env.getConfigFile() + ")");
+        }       
+
+        std::string env_output = FileSystemHelper::getRealPath(dvconf.sim_result_path_);       
+        std::string cwd = FileSystemHelper::getCwd();    
+        
+        if (!cwd.compare(0, env_output.size(), env_output)){
+
+            std::unordered_map<std::string, std::string> files = fileidx.getStoreMap();
+            std::string reldir = cwd.substr(env_output.length());
+            if (reldir=="") reldir="/";
+
+            //std::cout << "rel dir: " << reldir << std::endl;
+            for (auto f = files.begin(); f != files.end(); ++f){
+                std::string fdir = FileSystemHelper::getDirname(f->first);
+                //std::cout << "fdir: " << fdir << std::endl;
+                if (fdir==reldir){
+                    printf("%s\n", FileSystemHelper::getBasename(f->first).c_str());
+                }
+
+            }
+        }else{
+            error_exit(argv[0], "This is not an the output dir of this context!");
+        }
 
     } else if (cmd == SIMFS_INDEX){
         
@@ -298,35 +337,6 @@ int main(int argc, char * argv[]) {
             std::cout << "This file is not in the output directory of this environment! (directory of the file: " << dirname << ";  env. output dir: " << env_output << std::endl;
         }
 
-    
-        //check if path is output path as well
-        
-        //save file in idx
-
-        //save idx            
-
-
-        /*
-        simfs::simfs_env_t env;
-        KeyValueStore fileidx;
-
-        if (argc!=4){
-            error_exit(argv[0], "Invalid syntax. See usage.");
-        }
-
-        char * file = argv[3];
-
-        simfs::findEnviron(&env);
-        simfs::loadFileIndex(env, &fileidx);
-    
-        //TODO: handle the case where a directory is passed as argument
-        if (!FileSystemHelper::fileExists(file)){
-            LOG(ERROR, "File not found!");
-            exit(1);
-        }    
-
-        fileidx.setString(
-        */
 
     } else if (cmd == SIMFS_INFO){
 
