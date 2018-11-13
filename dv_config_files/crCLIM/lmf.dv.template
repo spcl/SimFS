@@ -428,8 +428,17 @@ end
 function cosmo_filename2nr(filename, file_type)
 	name = basename(filename)
 	if file_type == 1 then
-		date_str = string.sub(name, 5, 18)
-		nr = cb_datestr2seconds(date_str, "%Y%m%d%H%M%S") // cosmo_seconds_per_id_increment
+        format=""
+        date_str=""
+        if string.len(name) > 18 then
+            format =" %Y%m%d%H%M%S"
+		    date_str = string.sub(name, 5, 18)
+        else
+            format = "%Y%m%d%H"
+		    date_str = string.sub(name, 5, 14)
+        end
+		nr = cb_datestr2seconds(date_str, format) // cosmo_seconds_per_id_increment
+
 		return nr - cosmo_absolute_simstart
 	elseif file_type == 2 then
 		date_str = string.sub(name, 5, 12)

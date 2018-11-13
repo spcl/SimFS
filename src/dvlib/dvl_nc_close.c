@@ -157,7 +157,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
 
             MAKE_MESSAGE(buff, bsize, "%c:%s", DVL_MSG_FCLOSE_CLIENT, path);
 
-            DVLPRINT("DVL_NC_CLOSE: closing %s (ncid: %i)\n", path, toclose);
+            DVLPRINT("[DVLIB] DVL_NC_CLOSE: closing %s (ncid: %i)\n", path, toclose);
 
             dvl_send_message(buff, bsize, 1);
             
@@ -166,7 +166,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
             }
         }
 
-        printf("freeing data strutures id: %i\n", dfile->id);
+        //printf("freeing data strutures id: %i\n", dfile->id);
         /* free the file descriptor */
         dvl.open_files[dfile->id].trash_next = dvl.free_files;
         dvl.free_files = &(dvl.open_files[dfile->id]);
@@ -177,7 +177,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
     }
 
 
-    printf("to close: %i\n", toclose);
+    //printf("to close: %i\n", toclose);
 
     return toclose_res;
 

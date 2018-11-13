@@ -3,23 +3,39 @@
 echo "SimFS context name:"
 read context_name
 
-echo "Path to COSMO SimFS context:"
+echo "Path to COSMO SimFS context (leave blank for $(pwd)):"
 read path
 
-echo "Path to COSMO executable (lm_f90):"
-read cosmo_exe
+if [ -z $path ]; then
+  path=$(pwd)
+fi
+
+#echo "Path to COSMO executable (lm_f90):"
+#read cosmo_exe
 
 echo "Path to input/ folder (without trailing '/'): "
 read sim_input
 
-echo "Path to bc/ folder (without trailing '/'): "
+echo "Path to bc/ folder (without trailing '/', leave blank for ${sim_input}): "
 read sim_bc
 
-echo "Path to restarts/ folder (without trailing '/'): "
+if [ -z $sim_bc ]; then
+  sim_bc=$sim_input
+fi
+
+echo "Path to restarts/ folder (without trailing '/', leave blank for ${sim_input}): "
 read restarts
 
-echo "Path to output/ folder (without trailing '/'): "
+if [ -z $restarts ]; then
+  restarts=$sim_input
+fi
+
+echo "Path to output/ folder (without trailing '/', leave blank for ${sim_input}): "
 read results
+
+if [ -z $results ]; then
+  results=$sim_input
+fi
 
 echo "Path to temporary files directory (leave blank for $SCRATCH/tmp):"
 read tmp_dir
@@ -46,7 +62,7 @@ fi
 echo "Virtualizing COSMO"
 echo "Context name: " $context_name
 echo "Context path: " $path
-echo "COSMO exe: " $cosmo_exe
+#echo "COSMO exe: " $cosmo_exe
 echo "Path to input/ folder" $sim_input
 echo "Path to bc/ folder" $sim_bc
 echo "Path to restarts/ folder: " $restarts
@@ -72,56 +88,56 @@ sed -e "s/hstart[ ]*=[ ]*[0-9]*/hstart=__START__/" -e "s/hstop[ ]*=[ ]*[0-9]*/hs
 
 
 cat > $path/job << EOF_JOB
-#!/bin/tcsh
+#!/bin/csh
 #SBATCH --job-name=lm_f
 #SBATCH --output=job.out
-#SBATCH --nodes=100
+#SBATCH --nodes=106
 #SBATCH --ntasks=106
-#SBATCH --ntasks-per-core=1
-#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1
+##SBATCH --ntasks-per-core=1
+##SBATCH --cpus-per-task=1
 #SBATCH --partition=normal
 #SBATCH --time=00:10:00
 #SBATCH --account=pr04
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu
-module load daint-gpu
-setenv CRAY_CUDA_MPS 1
-#SBATCH --gres=gpu:1
-#SBATCH --constraint=gpu
-module load daint-gpu
-setenv CRAY_CUDA_MPS 1
+
 
 # Initialization
 set verbose
 set echo
+#unalias * ; unset noclobber
 
+module load daint-gpu
 # set environmental parameters
-setenv OMP_NUM_THREADS 1
-setenv COSMO_NPROC_NODEVICE 4
-setenv MALLOC_MMAP_MAX_ 0
-setenv MALLOC_TRIM_THRESHOLD_ 536870912
 setenv MV2_ENABLE_AFFINITY 0
 setenv MV2_USE_CUDA 1
 setenv MPICH_RDMA_ENABLED_CUDA 1
 setenv MPICH_G2G_PIPELINE 256
-setenv CRAY_CUDA_PROXY 0
-setenv CUDA_VA_RESERVATION_CHUNK_SIZE 4294967296
 
-
-#to be able to run it after the June 13, 2018 upgrade
-setenv CRAY_TCMALLOC_MEMFS_FORCE 1
-
+# cleanup
 \rm -rf YU* OUTPUT fort.* M_* core script_*.grc stdeo_*.grc grc.nqs *.tex
 
+# echo date
 date
+
 # Run LM in case directory
-simfs $context_name simulate srun -u $cosmo_exe
+simfs $context_name simulate srun -u -n 106 ./lm_f90
+
+# echo date
 date
+
+
+# do postprocessing
+cd ./output/
+../../bin/grc
+cd -
 
 # remove job tag (if present)
 \rm -f .jobid >&/dev/null
 
 # done
+
 EOF_JOB
 
 start_date=$(cat $path/INPUT_ORG| grep ydate_ini | cut -d "'" -f 2)

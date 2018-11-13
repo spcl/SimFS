@@ -78,7 +78,7 @@ int dvl_srv_connect(){
             //return INVALID_IP;
         }else{
 
-            printf("connecting to %s:%u\n", srv_ip, port);
+            //printf("connecting to %s:%u\n", srv_ip, port);
             int tries=0;
             res = -1;
             while (res<0 && tries<CONN_TRIES){
@@ -125,11 +125,11 @@ int dvl_send_message(char * buff, int size, int disconnect){
 	 
     int res = dvl_check_connection();
     if (res!=CONNECTED) return res;
-    DVLPRINT("Sending message: (len: %i): %s\n", size, buff);
+    //DVLPRINT("Sending message: (len: %i): %s\n", size, buff);
 
     res = write(sockfd, buff, size);
 
-    printf("write res: %i\n", res);
+    //printf("write res: %i\n", res);
     if (res<0){
         dvl_srv_disconnect();
         DVLPRINT("Error while writing to socket: %i (message: %s)\n", res, buff);

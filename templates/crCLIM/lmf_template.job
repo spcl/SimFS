@@ -17,6 +17,7 @@ cd $$EXE_DIR/
 
 mkdir -p runs/$$simdir >/dev/null 2>/dev/null
 cp INPUT_* runs/$$simdir 2>/dev/null
+cp lm_f90 runs/$$simdir 2>/dev/null
 cp job runs/$$simdir 2>/dev/null
 
 cd runs/$$simdir

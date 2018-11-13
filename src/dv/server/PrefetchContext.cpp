@@ -175,7 +175,7 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
 }
 
 void PrefetchContext::backward_prefetch(dv::id_type nr) {
-    printf("Backward prefetch not implented!\n");
+    //printf("Backward prefetch not implented!\n");
 }
 
 }

@@ -171,17 +171,34 @@ int main(int argc, char * argv[]) {
     
         /* Check if there is a known IP/PORT for it */
         simfs_env_addr_t addr;
-        if (!env.getLastKnownAddress(&addr)){
+
+        std::string dv_working_ip="", dv_working_port;
+    
+        if (!env.getLastKnownWorkingAddress(&addr)){
+            printf("Checking if cached DV IP works: %s; port: %s\n", addr.ip.c_str(), addr.port.c_str());
+            dv_working_ip = findWorkingAddress(addr.ip, addr.port);
+            dv_working_port = addr.port;
+        }
+
+        if (dv_working_ip=="" && !env.getLastKnownAddresses(&addr)){
 
             printf("Candidate IPs for DV: %s; port: %s\n", addr.ip.c_str(), addr.port.c_str());
-
-            std::string dv_working_ip = findWorkingAddress(addr.ip, addr.port);
+            dv_working_ip = findWorkingAddress(addr.ip, addr.port);
+            dv_working_port = addr.port;
 
             if (dv_working_ip=="") return -1;
-
-            setenv("DV_PROXY_SRV_IP", dv_working_ip.c_str(), 1);
-            setenv("DV_PROXY_SRV_PORT", addr.port.c_str(), 1);
+            addr.ip = dv_working_ip;
+            env.setNewWorkingAddress(addr);
+            env.save();
         }
+
+        if (dv_working_ip==""){
+            error_exit(argv[0], "Cannot find the DV address!\n");
+        }
+
+        setenv("DV_PROXY_SRV_IP", dv_working_ip.c_str(), 1);
+        setenv("DV_PROXY_SRV_PORT", dv_working_port.c_str(), 1);
+      
 
         /* Simulator needs specific env var */
         if (cmd == SIMFS_SIMULATE){
@@ -223,7 +240,7 @@ int main(int argc, char * argv[]) {
         addr.ip = dv->getIpAddress();
         addr.port = dv->getClientPort();
     
-        env.setNewAddress(addr);
+        env.setNewAddresses(addr);
         env.save(); /* so they are immediately visible */
 
         KeyValueStore fileidx;
@@ -267,22 +284,28 @@ int main(int argc, char * argv[]) {
         }       
 
         std::string env_output = FileSystemHelper::getRealPath(dvconf.sim_result_path_);       
-        std::string cwd = FileSystemHelper::getCwd();    
-        
+        std::string cwd;
+
+        if (argc<4) cwd = FileSystemHelper::getCwd();    
+        else cwd = argv[3];        
+
         if (!cwd.compare(0, env_output.size(), env_output)){
 
             std::unordered_map<std::string, std::string> files = fileidx.getStoreMap();
             std::string reldir = cwd.substr(env_output.length());
             if (reldir=="") reldir="/";
 
+            printf("Filename\t\t\tExists\t\tIndexed Chksum\t\tLast Chksum\n");
             //std::cout << "rel dir: " << reldir << std::endl;
             for (auto f = files.begin(); f != files.end(); ++f){
                 std::string fdir = FileSystemHelper::getDirname(f->first);
                 //std::cout << "fdir: " << fdir << std::endl;
-                if (fdir==reldir){
-                    printf("%s\n", FileSystemHelper::getBasename(f->first).c_str());
-                }
+                bool file_exists = FileSystemHelper::fileExists(env_output + "/" + f->first);
 
+                if (fdir==reldir){
+                    printf("%s\t\t", FileSystemHelper::getBasename(f->first).c_str());
+                    printf("%i\t\t[indexed chksum]\t\t[last chksum]\n", file_exists ? 1 : 0);
+                }
             }
         }else{
             error_exit(argv[0], "This is not an the output dir of this context!");

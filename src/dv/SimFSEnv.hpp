@@ -20,10 +20,14 @@ namespace simfs{
         SimFSEnv(SimFS &fs);
         int createEnv(string name);        
 
-        int getLastKnownAddress(simfs_env_addr_t * addr);      
-        void setNewAddress(simfs_env_addr_t addr);
+        int getLastKnownAddresses(simfs_env_addr_t * addr);      
+        void setNewAddresses(simfs_env_addr_t addr);
+        int getLastKnownWorkingAddress(simfs_env_addr_t * addr);      
+        void setNewWorkingAddress(simfs_env_addr_t addr);
 
-        void save();
+
+
+        int save();
 
         int loadFiles(KeyValueStore * files);
         int saveFiles(KeyValueStore * files);

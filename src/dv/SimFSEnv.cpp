@@ -94,12 +94,12 @@ int SimFSEnv::saveFiles(KeyValueStore * files){
     return files->toFile(getKVFile());
 }
 
-void SimFSEnv::save(){
-    kv_.toFile(getStateFile());
-
+int SimFSEnv::save(){
+    printf("saving state in %s\n", getStateFile().c_str());
+    return kv_.toFile(getStateFile());
 }
 
-int SimFSEnv::getLastKnownAddress(simfs_env_addr_t * addr){
+int SimFSEnv::getLastKnownAddresses(simfs_env_addr_t * addr){
     if (kv_.hasKey("ip") && kv_.hasKey("port")){
         addr->ip = kv_.getString("ip");
         addr->port = kv_.getString("port");
@@ -109,9 +109,24 @@ int SimFSEnv::getLastKnownAddress(simfs_env_addr_t * addr){
     return -1;
 }
 
-void SimFSEnv::setNewAddress(simfs_env_addr_t addr){
+int SimFSEnv::getLastKnownWorkingAddress(simfs_env_addr_t * addr){
+    if (kv_.hasKey("working_ip") && kv_.hasKey("working_port")){
+        addr->ip = kv_.getString("working_ip");
+        addr->port = kv_.getString("working_port");
+        
+        return 0;
+    }
+    return -1;
+}
+
+void SimFSEnv::setNewAddresses(simfs_env_addr_t addr){
     kv_.setString("ip", addr.ip);
     kv_.setString("port", addr.port);
+}
+
+void SimFSEnv::setNewWorkingAddress(simfs_env_addr_t addr){
+    kv_.setString("working_ip", addr.ip);
+    kv_.setString("working_port", addr.port);
 }
 
 bool SimFSEnv::isValid(){
