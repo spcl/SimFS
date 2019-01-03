@@ -85,7 +85,7 @@ void DV::run() {
         exit(1);
     }
 
-    startServer();
+    if (!this->listening_) startServer();
 
     fd_set read_fds;
     int max_fd = sim_socket_ > client_socket_ ? sim_socket_ : client_socket_;
@@ -401,7 +401,7 @@ void DV::removeRedirectFolder() {
     system(command.c_str());
 }
 
-int DV::startServerPart(const std::string &port) {
+int DV::startServerPart(std::string &port) {
     int status;
     struct addrinfo hints;
     struct addrinfo *servinfo;
@@ -432,13 +432,19 @@ int DV::startServerPart(const std::string &port) {
         std::cerr << "binding error: " << errno;
         exit(1);
     }
-    
+
+    struct sockaddr_in sock_info;
+    socklen_t len = sizeof(sock_info);
+    getsockname(sock, (struct sockaddr *) &sock_info, &len);
+    port = std::to_string(ntohs(sock_info.sin_port));    
+
     freeaddrinfo(servinfo);
 
     if (listen(sock, kListenBacklog) == -1) {
         std::cerr << "start listening error: " << errno;
         exit(1);
     }
+
 
     if (config_->dv_debug_output_on_) {
         std::cout << "started server " << config_->dv_hostname_ << ":" << port << " with socket " << sock << std::endl;
@@ -454,6 +460,9 @@ void DV::startServer() {
               << ", client: " << config_->dv_hostname_ << ":" << config_->dv_client_port_ << std::endl
               << "dv_max_prefetching_intervals " << config_->dv_max_prefetching_intervals_
               << ", dv_max_parallel_simjobs " << config_->dv_max_parallel_simjobs_ << std::endl;
+
+    this->listening_ = true;
+
 }
 
 void DV::stopServer() {
