@@ -27,6 +27,9 @@ namespace toolbox {
 
 		static double seconds(const time_point_type &start, const time_point_type &end);
 
+		static double milliseconds(const time_point_type &start, const time_point_type &end);
+
+
 	};
 
 }

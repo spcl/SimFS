@@ -71,10 +71,15 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     dv::id_type target_nr = dv_->getSimulatorPtr()->result2nr(filename);
     LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename + "; nr: " + std::to_string(target_nr));
 
+    toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+    double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
+
 
     if (is_miss) { 
 
         LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
+        LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " MISS: " +  std::to_string(time));
+
 
         /* prefetcher is in charge to restart the simulation */
         prefetcher_.handleMiss(target_nr, parameters[0]); 
@@ -87,8 +92,35 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
 
         prefetcher_.handleHit(target_nr, parameters[0]);
  
+        if (cache_entry!=NULL && !cache_entry->isFileUsedBySimulator()){
+            // is a full hit: the data is available /
+            LOG(CLIENT, 0, "HIT! Data is available!");
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT: " +  std::to_string(time));
+
+            return true;
+        }else if (is_being_simulated){
+            dv_->getStatsPtr()->incWaiting();
+            LOG(CLIENT, 0, "HIT (WAIT): Data already being simulated by: " + std::to_string(already_simulating_job->getJobId()));
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT_WAIT: " +  std::to_string(time));
+
+            already_simulating_job->handleClientFileOpen(target_nr);
+            return false;
+        }else{
+            assert(cache_entry != NULL);
+            // the simulator is currently writing this file! 
+            LOG(CLIENT, 0, "HIT (WAIT): Simulator is writing on this file!");
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT_WAIT_W: " +  std::to_string(time));
+
+            //FIXME: not sure if this is still reachable and if it will succeed (e.g., who notifies the client?)
+            return false;
+        }
+
+        /*
+        This does not work well because the hits following a miss will be seen
+        as "HIT (WAIT)", instead of "HIT!", if the resimulation is going to 
+        produce these files. 
         if (is_being_simulated) {
-            /* there is a simulation that will produce this file */
+            // there is a simulation that will produce this file 
             //dv::id_type waiting_time = requested_nr - already_simulating_job->getCurrentNr();
             dv_->getStatsPtr()->incWaiting();
             LOG(CLIENT, 0, "HIT (WAIT): Data already being simulated by: " + std::to_string(already_simulating_job->getJobId()));
@@ -96,15 +128,17 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
             return false;
 
         } else if (cache_entry!=nullptr && cache_entry->isFileUsedBySimulator()) {
-            /* the simulator is currently writing this file! */
+            // the simulator is currently writing this file! 
             LOG(CLIENT, 0, "HIT (WAIT): Simulator is writing on this file!");
             return false;
 
         } else {
-            /* is a full hit: the data is available */
+            // is a full hit: the data is available /
             LOG(CLIENT, 0, "HIT! Data is available!");
             return true;
         }
+        */
+        
     }
 
 

@@ -376,6 +376,9 @@ dv::id_type SimJob::launch() {
     //std::cout << "simulation sysjobid: " << sysjobid_ << std::endl;
 
     start_time_ = toolbox::TimeHelper::now();
+    double time = toolbox::TimeHelper::milliseconds(dv_ptr_->start_time_, start_time_);
+    LOG(CLIENT, 0, "[EVENT][" + std::to_string(jobid_) + "] SIMSTART: " +  std::to_string(time));
+
     return jobid_;
 }
 

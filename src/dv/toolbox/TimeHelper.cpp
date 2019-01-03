@@ -19,4 +19,12 @@ double TimeHelper::seconds(const TimeHelper::time_point_type &start,
     return seconds_type(end - start).count();
 }
 
+double TimeHelper::milliseconds(const TimeHelper::time_point_type &start,
+                           const TimeHelper::time_point_type &end) {
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+}
+
+
+
 }

@@ -146,8 +146,12 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
     if (nr > critical_step) {
         /* PREFETCH!!! */
 
+        toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+        double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
+
         int simlen = ceil(simalpha / MAX(simtau, mytau))*stride_;
         for (int i=0; i<parsims_; i++) {
+            dv::id_type simjobid = -1;
             LOG(PREFETCHER, 0, "New simulation! " + \
                 std::to_string(last_nr_) + " -> " + std::to_string(last_nr_ + simlen) + "; " + \
                 "simlen: " + std::to_string(simlen) + "; " + \
@@ -160,9 +164,11 @@ void PrefetchContext::forward_prefetch(dv::id_type nr) {
                 LOG(WARNING, 0, "Cannot create prefetch simulation!");
             }else{
                 last_nr_ = simjob->getSimStop();
-                dv::id_type simjobid = simjob->getJobId();
+                simjobid = simjob->getJobId();
                 dv_->enqueueJob(simjobid, std::move(simjob));
             }
+            LOG(PREFETCHER, 0, "[EVENT][" + std::to_string(simjobid) + "] PREFETCH: " +  std::to_string(time));
+
         }
 
         dv::id_type max_parsims = dv_->getConfigPtr()->dv_max_vertical_prefetching_intervals_;

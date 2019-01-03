@@ -432,7 +432,7 @@ int DV::startServerPart(const std::string &port) {
         std::cerr << "binding error: " << errno;
         exit(1);
     }
-
+    
     freeaddrinfo(servinfo);
 
     if (listen(sock, kListenBacklog) == -1) {

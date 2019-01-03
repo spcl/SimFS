@@ -91,7 +91,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
             printf("[DVLIB] File is not avail. Opening meta: %s\n", buff+1);
             res = (*onc_open)(buff+1, omode, ncidp); 
             if (res!=NC_NOERR){
-                printf("Fake metadata file not found --> waiting for real data\n");
+                printf("[DVLIB] Fake metadata file not found --> waiting for real data\n");
         
                 /*send fake get message to get the notification */
                 MAKE_MESSAGE(buff, msgsize, "%c:%s:%i:%i:", DVL_MSG_VGET, dfile->path, 0, dvl.gni.myrank);
@@ -104,6 +104,8 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
             
                 /* wait for notification */
                 dvl_recv_message(buff, BUFFER_SIZE, 1);
+                //assert(buff[0]==DVL_REPLY_FILE_READY);                
+
             }else{
                 is_meta=1;
                 dfile->state = DVL_FILE_SIM;
