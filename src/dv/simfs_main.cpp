@@ -295,16 +295,17 @@ int main(int argc, char * argv[]) {
             std::string reldir = cwd.substr(env_output.length());
             if (reldir=="") reldir="/";
 
-            printf("Filename\t\t\tExists\t\tIndexed Chksum\t\tLast Chksum\n");
+            printf("Filename\t\t\tExists\t\tIndexed Chksum\t\t\tLast Chksum\n");
             //std::cout << "rel dir: " << reldir << std::endl;
             for (auto f = files.begin(); f != files.end(); ++f){
                 std::string fdir = FileSystemHelper::getDirname(f->first);
                 //std::cout << "fdir: " << fdir << std::endl;
-                bool file_exists = FileSystemHelper::fileExists(env_output + "/" + f->first);
+                std::string fname = env_output + "/" + f->first;
+                bool file_exists = FileSystemHelper::fileExists(fname) && FileSystemHelper::fileSize(fname) > 0;
 
                 if (fdir==reldir){
                     printf("%s\t\t", FileSystemHelper::getBasename(f->first).c_str());
-                    printf("%i\t\t[indexed chksum]\t\t[last chksum]\n", file_exists ? 1 : 0);
+                    printf("%s\t\t[indexed chksum]\t\t[last chksum]\n", file_exists ? "Yes" : "No");
                 }
             }
         }else{
