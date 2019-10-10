@@ -7,7 +7,7 @@
   1) Install depenencies
 
   2) Build DV 
-    - `./build_dv.sh` to install in current_dir/build
+    - `./build_dv.sh` to install in current_dir/build. Add build/bin/ to your $PATH to have the `simfs` command available.
     - `sudo ./build_dv.sh install` to install in /usr/bin
     
   3) Build DVLib
@@ -24,20 +24,23 @@
 
   2) Initialize `heat` environment:
     - `cd examples/heatequation/simulator` 
-    - `simfs init heat ../../../dv_config_files/heatequation.dv`
+    - `simfs heat init ../../../dv_config_files/heatequation.dv`
     - Note the heatequation.dv file is created by the DV build process.
 
 
 **Run the heat equation example:**
 
   1) Run DV
-    - `simfs start heat`
-    - If you get a binding error, then specify different ports with: `simfs start heat -C <client_port> -S <server_port>
+    - `simfs heat start`
+    - If you get a binding error, then specify different ports with: `simfs heat start -C <client_port> -S <server_port>
 
   2) Run heat equation visulizer 
     - `cd examples/heatequation/client`
-    - `simfs run heat python reader2.py`
+    - `simfs heat run python reader2.py`
 
+ **Debug:**
+   - `export SIMFS_LOG_LEVEL=3`
+   - `export SIMFS_LOG="ERROR,INFO,CLIENT,SIMULATOR,CACHE,PREFETCHER"`
 
     
 
