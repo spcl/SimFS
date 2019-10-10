@@ -38,6 +38,9 @@
     - `cd examples/heatequation/client`
     - `simfs heat run python reader2.py`
 
+ **Debug:**
+   - `export SIMFS_LOG_LEVEL=3`
+   - `export SIMFS_LOG="ERROR,INFO,CLIENT,SIMULATOR,CACHE,PREFETCHER"`
 
     
 
