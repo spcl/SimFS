@@ -47,11 +47,11 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
 #endif
         HASH_FIND_INT(dvl.open_files_idx, &id, dfile);
         if (dfile == NULL) {
-            fprintf(stderr, "ERROR: client has tried to close a file that was not open. Returning NC_EBADID.\n");
+            fprintf(stderr, "Warning: client is closing a file (id: %i) that was not open by DVLIB. Trying to close it with netcdf (hint: opening/creating function may have not been intercepted!).\n", id);
 #ifdef __MT__
             pthread_rwlock_unlock(&dvl.open_files_lock);
 #endif
-            return NC_EBADID;            
+            return (*onc_close)(id);     
         }
 
 
@@ -105,6 +105,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
         path = is_result_file(cpath, npath);
         if (path != NULL) {
             file_type = DVL_FILETYPE_RESULT;
+            DVL_PROFILE(DVL_NC_CLOSE_ID, "dvl_nc_close", cpath);
         }
     }
 
@@ -150,6 +151,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
         if (dfile != dfile_check) {
             fprintf(stderr, "ERROR client calling _dvl_nc_close(): dfile structure removed by other thread before sending message (i.e. 2 close calls for the same file)");
             pthread_rwlock_unlock(&dvl.open_files_lock);
+            DVL_PROFILE_END;
             return toclose_res;
         }
 #endif
@@ -157,7 +159,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
 
             MAKE_MESSAGE(buff, bsize, "%c:%s", DVL_MSG_FCLOSE_CLIENT, path);
 
-            DVLPRINT("DVL_NC_CLOSE: closing %s (ncid: %i)\n", path, toclose);
+            DVLPRINT("[DVLIB] DVL_NC_CLOSE: closing %s (ncid: %i)\n", path, toclose);
 
             dvl_send_message(buff, bsize, 1);
             
@@ -166,7 +168,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
             }
         }
 
-        printf("freeing data strutures id: %i\n", dfile->id);
+        //printf("freeing data strutures id: %i\n", dfile->id);
         /* free the file descriptor */
         dvl.open_files[dfile->id].trash_next = dvl.free_files;
         dvl.free_files = &(dvl.open_files[dfile->id]);
@@ -177,8 +179,8 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
     }
 
 
-    printf("to close: %i\n", toclose);
-
+    //printf("to close: %i\n", toclose);
+    DVL_PROFILE_END;
     return toclose_res;
 
 }

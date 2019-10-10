@@ -55,8 +55,10 @@ namespace dv {
 
 		void handleRangeRequest(dv::id_type flag, std::unique_ptr<ClientDescriptor::RangeRequest> request);
 
-        bool newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams);
+        std::unique_ptr<SimJob> newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams);
 
+    public:
+        dv::id_type getAppID() { return appid_; }
 
 	private:
 		DV *dv_;

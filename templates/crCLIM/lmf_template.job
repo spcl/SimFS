@@ -1,0 +1,31 @@
+#!/bin/bash
+
+export SIMSTART=$simstart
+export SIMSTOP=$simstop
+export DV_JOBID=$jobid
+export DV_GNI_ADDR=$gni_addr
+export EXE_DIR=$config_dir
+#/scratch/snx1600/salvodg/cosmo-pompa/cosmo/test/climate/crClim2km_DVL/04_lm_f/
+
+simdir=run_$${SLURMID}_$${DV_JOBID}
+
+#create log dir
+LOG_DIR=$$(pwd)/logs/$${simdir}/
+mkdir -p $$LOG_DIR
+
+cd $$EXE_DIR/
+
+mkdir -p runs/$$simdir >/dev/null 2>/dev/null
+cp INPUT_* runs/$$simdir 2>/dev/null
+cp lm_f90 runs/$$simdir 2>/dev/null
+cp job runs/$$simdir 2>/dev/null
+
+cd runs/$$simdir
+
+sed -e "s/__START__/$$SIMSTART/g" -e "s/__STOP__/$$SIMSTOP/g" INPUT_ORG_TEMPLATE > INPUT_ORG
+cp INPUT_IO_TEMPLATE INPUT_IO
+#sed -e "s/ydir='.\/output/ydir='..\/..\/..\/output/g" -e "s/ydirini='.\/input/ydirini='..\/..\/..\/input/g" -e "s/ydirbd='.\/bc/ydirbd='..\/..\/..\/bc/g" INPUT_IO_TEMPLATE > INPUT_IO
+
+sbatch job > $$LOG_DIR/cosmo.$${DV_JOBID}.out 2> $$LOG_DIR/cosmo.$${DV_JOBID}.err &
+
+echo -n $$DV_JOBID

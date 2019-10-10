@@ -47,7 +47,7 @@ void FileCacheLRU::initializeWithFiles() {
             size = 0;
         }
         fd->setSize(size);
-        this->put(rel_path, std::move(fd));
+        if (size>0 /* <- it's not a fake file. TODO: we should identify this case better, 0-bytes file may be legit */) this->put(rel_path, std::move(fd));
     };
 
     toolbox::FileSystemHelper::readDir(dv_ptr_->getConfigPtr()->sim_result_path_,

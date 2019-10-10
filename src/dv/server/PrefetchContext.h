@@ -13,8 +13,8 @@ namespace dv {
     class PrefetchContext {
     public:
         PrefetchContext(ClientDescriptor *client, dv::id_type appid);
-        void handleHit(const std::string &filename);
-        void handleMiss(const std::string &filename); 
+        void handleHit(dv::id_type target_nr, std::string parameters);
+        void handleMiss(dv::id_type target_nr, std::string parameters); 
 
         //returns 0 if a stride is not determined (e.g., state!=STEADY)
         dv::id_type getStride();
@@ -38,7 +38,7 @@ namespace dv {
     private:
         void forward_prefetch(dv::id_type nr);
         void backward_prefetch(dv::id_type nr);
-        void check_for_prefetch(const std::string &filename); 
+        void check_for_prefetch(dv::id_type target_nr); 
     
 
     };

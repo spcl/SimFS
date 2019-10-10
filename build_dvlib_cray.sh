@@ -82,6 +82,6 @@ cp src/dvlib/extended_api/dvl_extended_api.py lib/
 # note: we will also copy it to other locations where python programs are using it
 # -> easier found if locally in the same folder
 
-. distribute_extended_api_python_module.sh
+#. distribute_extended_api_python_module.sh
 
 #

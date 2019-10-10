@@ -3,15 +3,18 @@
 //
 
 #include "SimulatorFileCloseMessageHandler.h"
-
+ 
 #include <memory>
 #include <unistd.h>
 #include <iostream>
+#include <assert.h>
 #include "../DV.h"
 #include "../../caches/filecaches/FileCache.h"
 #include "../../caches/filecaches/FileDescriptor.h"
 #include "../../simulator/Simulator.h"
 #include "../../toolbox/StringHelper.h"
+#include "../../toolbox/TimeHelper.h"
+
 
 namespace dv {
 
@@ -49,7 +52,6 @@ void SimulatorFileCloseMessageHandler::serve() {
         return;
     }
 
-    LOG(SIMULATOR, 0, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B)");
 
     // lookup simulation
     SimJob *simjob = dv_->findSimJob(jobid_);
@@ -96,6 +98,8 @@ void SimulatorFileCloseMessageHandler::serve() {
         // note: this code path should no longer happen with the new handling of file redirection
         // that adds all valid files in production already to the waiting list during simulator_file_create
         // event handling
+        assert(0);
+
         std::string fullpath = toolbox::StringHelper::joinPath(dv_->getConfigPtr()->sim_result_path_, filename_);
         std::unique_ptr<FileDescriptor> descriptor = std::make_unique<FileDescriptor>(filename_, fullpath);
         descriptor->setFileAvailable(true);
@@ -119,6 +123,8 @@ void SimulatorFileCloseMessageHandler::serve() {
         fileDescriptor->setFileUsedBySimulator(false);
         fileDescriptor->setSize(filesize_);
         dv_->getFileCachePtr()->refresh(filename_);
+    
+        dv_->indexFile(filename_);
 
         // again a lookup since pointer may have changed in some scenarios
         // (transfer of descriptor from internal waiting list to actual cache)
@@ -141,14 +147,22 @@ void SimulatorFileCloseMessageHandler::serve() {
     //std::cout << "   Job recognized. Handling fopen in simulations." << std::endl;
     simjob->handleSimulatorFileClose(filename_, fileDescriptor);
 
-    //printf("filedescriptor: %p\n", fileDescriptor);
+    toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+    double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
+    //LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()));
+    LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()) + "; time: " + std::to_string(time));
 
+    LOG(SIMULATOR, 1, "[EVENT][" + std::to_string(jobid_) + "] SIM_FILE_READY " +  filename_ + ": " + std::to_string(time));
+    
     // notifications
     // 1) update clientDescriptors (-> prepare for next requests)
     int client_notification_count = 0;
     for (auto client : fileDescriptor->getWaitingClientPtrs()) {
         client->handleNotification(simjob);
         ++client_notification_count;
+
+        LOG(SIMULATOR, 1, "[EVENT][" + std::to_string(client->getAppID()) + "] CLIENT_NOTIFICATION " + filename_ + ": " + std::to_string(time));
+
     }
     fileDescriptor->removeAllWaitingClientPtrs();
 
@@ -166,7 +180,9 @@ void SimulatorFileCloseMessageHandler::serve() {
 
     fileDescriptor->removeAllNotificationSockets();
 
-    LOG(SIMULATOR, 1, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+    LOG(SIMULATOR, 3, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+
+
     //std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
     //		  << client_notification_count << " clients." << std::endl;
 

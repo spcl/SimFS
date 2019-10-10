@@ -27,6 +27,7 @@
 #include "../toolbox/FileSystemHelper.h"
 #include "../toolbox/TimeHelper.h"
 #include "../toolbox/NetworkHelper.h"
+#include "../toolbox/TimeHelper.h"
 
 
 namespace dv {
@@ -60,6 +61,23 @@ void DV::setFileCachePtr(std::unique_ptr<FileCache> cache_ptr) {
     filecache_ptr_ = std::move(cache_ptr);
 }
 
+void DV::setPassive(){
+    passive_mode_ = true;
+}
+
+bool DV::isPassive(){
+    return passive_mode_;
+}
+
+void DV::setFileIndex(toolbox::KeyValueStore * idx){
+    file_idx_ = idx;
+}
+
+void DV::indexFile(std::string filename){
+    if (file_idx_==NULL) return;
+    file_idx_->setString(filename, "1");
+}
+
 
 void DV::run() {
     if (!createRedirectFolder()) {
@@ -67,14 +85,14 @@ void DV::run() {
         exit(1);
     }
 
-    startServer();
+    if (!this->listening_) startServer();
 
     fd_set read_fds;
     int max_fd = sim_socket_ > client_socket_ ? sim_socket_ : client_socket_;
 
     std::string delimiter(":");
 
-
+    start_time_ = toolbox::TimeHelper::now();
 
     while (!config_->stop_requested_predicate_() && !quit_requested_) {
         FD_ZERO(&read_fds);
@@ -210,6 +228,12 @@ const std::string &DV::getRedirectPath() const {
     return redirect_path_;
 }
 
+/* only index (used by the passive mode where the job is already running) */
+void DV::indexJob(dv::id_type id, std::unique_ptr<SimJob> job) {
+    simulation_jobs_[id] = std::move(job);
+}
+
+/* index & launch */
 void DV::enqueueJob(dv::id_type id, std::unique_ptr<SimJob> job) {
     simulation_jobs_[id] = std::move(job);
     jobqueue_.enqueue(simulation_jobs_[id].get());
@@ -309,6 +333,10 @@ dv::counter_type DV::getNumberOfPrefetchingJobs(dv::id_type client) {
     return count;
 }
 
+void DV::deindexJob(dv::id_type id) {
+    simulation_jobs_.erase(id);
+}
+
 void DV::removeJob(dv::id_type id) {
     jobqueue_.handleJobTermination();
     simulation_jobs_.erase(id);
@@ -373,7 +401,7 @@ void DV::removeRedirectFolder() {
     system(command.c_str());
 }
 
-int DV::startServerPart(const std::string &port) {
+int DV::startServerPart(std::string &port) {
     int status;
     struct addrinfo hints;
     struct addrinfo *servinfo;
@@ -405,12 +433,18 @@ int DV::startServerPart(const std::string &port) {
         exit(1);
     }
 
+    struct sockaddr_in sock_info;
+    socklen_t len = sizeof(sock_info);
+    getsockname(sock, (struct sockaddr *) &sock_info, &len);
+    port = std::to_string(ntohs(sock_info.sin_port));    
+
     freeaddrinfo(servinfo);
 
     if (listen(sock, kListenBacklog) == -1) {
         std::cerr << "start listening error: " << errno;
         exit(1);
     }
+
 
     if (config_->dv_debug_output_on_) {
         std::cout << "started server " << config_->dv_hostname_ << ":" << port << " with socket " << sock << std::endl;
@@ -426,6 +460,9 @@ void DV::startServer() {
               << ", client: " << config_->dv_hostname_ << ":" << config_->dv_client_port_ << std::endl
               << "dv_max_prefetching_intervals " << config_->dv_max_prefetching_intervals_
               << ", dv_max_parallel_simjobs " << config_->dv_max_parallel_simjobs_ << std::endl;
+
+    this->listening_ = true;
+
 }
 
 void DV::stopServer() {

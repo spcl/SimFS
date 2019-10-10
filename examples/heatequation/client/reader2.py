@@ -82,7 +82,10 @@ def data_gen(framenumber):
     y = np.arange(0, 100)
     xx, yy = np.meshgrid(x, y)
 
-    surf = ax.plot_surface(xx, yy, data, cmap=cm.coolwarm, vmin=0, vmax=20)
+    print type(xx)
+    print type(yy)
+    print type(data)
+    surf = ax.plot_surface(xx, yy, np.array(data), cmap=cm.coolwarm, vmin=0, vmax=20)
 
     return surf
 

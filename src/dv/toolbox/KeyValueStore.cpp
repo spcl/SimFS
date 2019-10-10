@@ -75,7 +75,7 @@ bool KeyValueStore::toFile(const std::string &filename,
     std::string str = toString(delimiter, binder);
     std::ofstream out;
     try {
-        out.open(filename);
+        out.open(filename, std::ofstream::out);
         out << str;
         out.close();
     } catch (std::ifstream::failure e) {

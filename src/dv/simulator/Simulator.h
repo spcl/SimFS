@@ -93,6 +93,8 @@ namespace dv {
 													   dv::id_type target_stop_nr,
 													   std::unique_ptr<toolbox::KeyValueStore> parameters);
 
+        std::unique_ptr<SimJob> generatePassiveSimJob(dv::id_type jobid);
+
 		//--- alpha and taus ---------------------------------------------------
 		// TODO: may need adjustment after discussing how to handle
 		//       these summary values; note: principal calculation

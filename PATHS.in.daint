@@ -1,0 +1,98 @@
+# paths for the various Makefiles and run scripts
+# on the current installation (either x86 or cray)
+# v1.2
+
+# --- SDAVI --------------------------------------------------------------------
+# absolute paths are needed
+
+# unselect if no need to build
+export SDAVI_BUILD_FOR_NETCDF=YES
+export SDAVI_BUILD_FOR_HDF5=NO
+
+# for compilation
+export SDAVI_NETCDF_PATH=/apps/daint/UES/jenkins/6.0.UP04/gpu/easybuild/software/netCDF/4.4.1.1-CrayGNU-17.08/
+export SDAVI_HDF5_1_8_PATH=
+export SDAVI_HDF5_1_10_PATH=
+
+# for benchmarking with LIBLSB (optional)
+export SDAVI_LIBLSB_PATH=
+
+
+# for networking: IP address detection
+export SDAVI_IFCONFIG=/sbin/ifconfig
+export SDAVI_INTERFACE=ib3
+#e.g., eth0, ipogif0 (Piz Daint)
+
+# function to get machine IP address (machine dependent)
+# alternative for x86: provide hard coded IP address
+#export SDAVI_IP=$($SDAVI_IFCONFIG $SDAVI_INTERFACE | grep "inet" | cut -d ':' -f 2 | cut -d ' ' -f 1)
+export SDAVI_IP="127.0.0.1"
+#export SDAVI_IP=$($SDAVI_IFCONFIG $SDAVI_INTERFACE | grep "inet " | cut -d ' ' -f 10)
+
+
+# use path that matches the HDF5 version needed for Python h5py in client applications
+# we need v1.10
+export SDAVI_H5PY_HDF5_PATH=$SDAVI_HDF5_1_10_PATH
+export SDAVI_CLIENT_LIBDVLH=libdvlh10.so
+
+# if you need v1.8 for the client, then switch the comments
+#export SDAVI_H5PY_HDF5_PATH=$SDAVI_HDF5_1_8_PATH
+#export SDAVI_CLIENT_LIBDVLH=libdvlh8.so
+
+# path to this main folder of sdavi, which will be accessed from various locations
+export SDAVI_DIR=__SDAVI_DIR__
+
+# deduced from SDAVI_DIR
+export DV_LIB_DIR=$SDAVI_DIR/lib
+
+# --- COSMO --------------------------------------------------------------------
+# absolute paths are needed
+
+export COSMO_DIR=
+export COSMO_RUN_CMD=
+
+# --- FLASH --------------------------------------------------------------------
+# absolute paths are needed
+
+# path to version 4.4 folder of FLASH (contains setup file)
+# e.g. FLASH_DIR=~/FLASH/FLASH4.4 
+export FLASH_DIR=~/FLASH/FLASH4.4
+
+# path to HDF5 v1.8 base folder
+# e.g. /usr/local/hdf5_1_8
+# see above for SDAVI_HDF5_1_8_PATH
+export FLASH_HDF5_PATH=$SDAVI_HDF5_1_8_PATH
+
+# the following paths need to be set only for the problems to be tested
+# folders will be generated as needed, paths should be on a scratch drive if available
+# WARNING: If the folder exists, all files in it will be deleted!
+export FLASH_RESTART_1_1=~/test_flash/restart_1_1
+export FLASH_RESTART_1_8=~/test_flash/restart_1_8
+export FLASH_RESTART_1_27=~/test_flash/restart_1_27
+export FLASH_RESTART_16_512=~/test_flash/restart_16_512
+export FLASH_RESTART_54_1728=~/test_flash/restart_54_1728
+
+# here the actual experiment will create and access all result files
+# folders will be generated as needed, path should be on a scratch drive if available
+# WARNING: If the folder exists, all files in it will be deleted!
+export FLASH_RUN_DIR=~/test_flash/run
+
+
+# Running FLASH on Cray uses this additional variables,
+# and additional configurations in the experiment .sbatch files,
+# in run_sdavi.sh and in the template .sh files in the folder driver.
+# Already for compilation/restart file generation, the .sbatch file in folder for_FLASH
+# needs to be adjusted.
+# All the modifications are too complex to do them here with small adjustments of
+# variables. Please check these mentioned files in detail and adjust them to
+# your system as needed.
+
+
+# adjust the launch command for batches
+# used in
+# - the Makefile in ./for_FLASH
+# additional adjustments may be needed in the .sbatch files for your system
+export FLASH_SBATCH_CMD=sbatch
+
+# Please note that running the larger allocations can get quite expensive rather quickly,
+# in particular with experiments run later.

@@ -142,6 +142,25 @@ std::string FileSystemHelper::getBasename(const std::string &path) {
     return std::string(b);
 }
 
+#include <stdio.h>
+
+std::string FileSystemHelper::getRealPath(const std::string &path) {
+    char * rpath = realpath(path.c_str(), NULL);    
+    printf("PATH: %s\n", path.c_str());
+    printf("real path: %s\n", rpath);
+    std::string res;
+
+    if (rpath!=NULL){
+        res = std::string(rpath);
+        free(rpath);
+    }else{
+        res = std::string("");
+    }
+    
+    return res;
+
+}
+
 std::string FileSystemHelper::getDirname(const std::string &path) {
     // note dirname may modify the string -> create a copy first
     char buffer[path.length() + 2];

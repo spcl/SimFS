@@ -5,6 +5,8 @@
 
 usage="$0 [--netcdf <netcdf path>] [--hdf5_108 <HDF5 1.8 path>] [--hdf5_110 <HDF5 1.10 path>] [--liblsb <liblsb path>]"
 
+suffix=""
+
 while test -n "$1"; do
     case $1 in
         -n|--netcdf)
@@ -27,8 +29,10 @@ while test -n "$1"; do
         ;;
         -l|--liblsb)
             echo "LibLSB set: $2";
-            benchflag="-DBENCH"
+            #benchflag="-DBENCH"
+            benchflag="-DPROFILE"
             SDAVI_LIBLSB_PATH=$2
+            suffix="_profile"
             shift 2
         ;;
         *) 
@@ -69,21 +73,21 @@ no_data_during_redirect=""
 # DVLib for NetCDF
 if [ "$SDAVI_BUILD_FOR_NETCDF" = "YES" ]; then
 	echo "Building build/lib/libdvl.so for netcdf"
-	gcc $NETCDFI $LIBLSBI $no_data_during_redirect -Wall -fPIC -shared -std=c99 -O2 -o build/lib/libdvl.so src/dvlib/*.c src/dvlib/extended_api/*.c -ldl $NETCDFL $LIBLSBL -lnetcdf
+	gcc $NETCDFI $LIBLSBI $no_data_during_redirect -Wall -fPIC -shared -std=c99 -O2 -o build/lib/libdvl${suffix}.so src/dvlib/*.c src/dvlib/extended_api/*.c -ldl $NETCDFL $LIBLSBL -lnetcdf
 	echo "Building build/lib/libdvlmt.so for netcdf (multithreading-aware for multithreaded clients; note: netcdf itself is *not* thread-safe; client application must handle that)"
-	gcc $NETCDFI $LIBLSBI $no_data_during_redirect -Wall -Wno-unused-variable -Wno-unused-but-set-variable -fPIC -shared -std=c99 -O2 -D__MT__ -o build/lib/libdvlmt.so src/dvlib/*.c src/dvlib/extended_api/*.c -ldl $NETCDFL $LIBLSBL -lnetcdf -pthread
+	gcc $NETCDFI $LIBLSBI $no_data_during_redirect -Wall -Wno-unused-variable -Wno-unused-but-set-variable -fPIC -shared -std=c99 -O2 -D__MT__ -o build/lib/libdvlmt${suffix}.so src/dvlib/*.c src/dvlib/extended_api/*.c -ldl $NETCDFL $LIBLSBL -lnetcdf -pthread
 fi
 
 # DVLib for HDF5
 if [ "$SDAVI_BUILD_FOR_HDF5" = "YES" ]; then
 	echo "Building build/lib/libdvlh8.so for HDF5 v1.8.16"
-	gcc $HDF5_8I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5__ -D__HDF5_1_8__ -D__FLASH__ -o build/lib/libdvlh8.so src/dvlib/hdf5/*.c src/dvlib/dvl.c src/dvlib/dvl_proxy.c src/dvlib/dvl_rdma.c src/dvlib/extended_api/*.c -ldl $HDF5_8L $LIBLSBL -lhdf5
+	gcc $HDF5_8I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5__ -D__HDF5_1_8__ -D__FLASH__ -o build/lib/libdvlh8${suffix}.so src/dvlib/hdf5/*.c src/dvlib/dvl.c src/dvlib/dvl_proxy.c src/dvlib/dvl_rdma.c src/dvlib/extended_api/*.c -ldl $HDF5_8L $LIBLSBL -lhdf5
 	echo "Building build/lib/libdvlh10.so for HDF5 v1.10 (h5py)"
-	gcc $HDF5_10I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5__ -D__HDF5_1_10__ -D__FLASH__ -o build/lib/libdvlh10.so src/dvlib/hdf5/*.c src/dvlib/dvl.c src/dvlib/dvl_proxy.c src/dvlib/dvl_rdma.c src/dvlib/extended_api/*.c -ldl $HDF5_10L $LIBLSBL -lhdf5
+	gcc $HDF5_10I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5__ -D__HDF5_1_10__ -D__FLASH__ -o build/lib/libdvlh10${suffix}.so src/dvlib/hdf5/*.c src/dvlib/dvl.c src/dvlib/dvl_proxy.c src/dvlib/dvl_rdma.c src/dvlib/extended_api/*.c -ldl $HDF5_10L $LIBLSBL -lhdf5
     echo "Building build/lib/libhdf5profiler8.so for HDF5 v1.8.16"
-    gcc $HDF5_8I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5_1_8__ -o build/lib/libhdf5profiler8.so hdf5_profiler/hdf5_bind.c -ldl $HDF5_8L $LIBLSBL -lhdf5
+    gcc $HDF5_8I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5_1_8__ -o build/lib/libhdf5profiler8${suffix}.so hdf5_profiler/hdf5_bind.c -ldl $HDF5_8L $LIBLSBL -lhdf5
     echo "Building build/lib/libhdf5profiler10.so for HDF5 v1.10 (h5py)"
-    gcc $HDF5_10I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5_1_10__ -o build/lib/libhdf5profiler10.so hdf5_profiler/hdf5_bind.c -ldl $HDF5_10L $LIBLSBL -lhdf5
+    gcc $HDF5_10I $LIBLSBI -Wall -fPIC -shared -std=c99 -O2 -D__HDF5_1_10__ -o build/lib/libhdf5profiler10${suffix}.so hdf5_profiler/hdf5_bind.c -ldl $HDF5_10L $LIBLSBL -lhdf5
 fi
 
 # copy the python module

@@ -26,6 +26,8 @@ int dvl_nc_create(char * opath, int omode, int * ncidp, onc_create_t onc_ocreate
 #endif
     DVL_CHECK(DVL_NC_CREATE_ID);
 
+    printf("CREATING!\n");   
+
     /* Check if this file is relevant to us */
     char * path = is_result_file(opath, npath);
     if (path == NULL) {
@@ -40,7 +42,6 @@ int dvl_nc_create(char * opath, int omode, int * ncidp, onc_create_t onc_ocreate
     }
  
 
-    printf("CREATING!\n");   
     
     int redirected = 0;
     char *create_path = opath;

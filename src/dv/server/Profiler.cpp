@@ -21,14 +21,15 @@ void Profiler::reset() {
 }
 
 void Profiler::addAlpha(double alpha) {
-    alphas_.push_back(alpha);
     last_time_ = toolbox::TimeHelper::now();
-    MOVING_AVG(moving_alpha_, alpha);
-    printf("PROFILER: adding alpha: %lf; new alpha: %lf\n", alpha, moving_alpha_);
+    if (alphas_.size() == 0) moving_alpha_ = alpha;
+    else MOVING_AVG(moving_alpha_, alpha);
+    alphas_.push_back(alpha);
+    printf("PROFILER: adding alpha: %lf; new alpha: %lf (alphas_.size()=%lu)\n", alpha, moving_alpha_, alphas_.size());
 }
 
 double Profiler::getAlpha() const {
-    if (alphas_.size() == 0 || taus_.size() == 0) {
+    if (alphas_.size() == 0) {
         return -1.0;
     }
 
@@ -47,9 +48,10 @@ double Profiler::getMedianAlpha() const {
 double Profiler::newTau() {
     toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
     double newtau = toolbox::TimeHelper::seconds(last_time_, now);
-    taus_.push_back(newtau);
     last_time_ = now;
-    MOVING_AVG(moving_tau_, newtau);
+    if (taus_.size() == 0) moving_tau_ = newtau;
+    else MOVING_AVG(moving_tau_, newtau);
+    taus_.push_back(newtau);
     return newtau;
 }
 

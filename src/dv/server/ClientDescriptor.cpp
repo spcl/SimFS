@@ -71,31 +71,56 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     dv::id_type target_nr = dv_->getSimulatorPtr()->result2nr(filename);
     LOG(CLIENT, 0, "Client " + std::to_string(appid_) + " is opening " + filename + "; nr: " + std::to_string(target_nr));
 
-    if (is_miss) {
-        prefetcher_.handleMiss(filename);
+    toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+    double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
+
+
+    if (is_miss) { 
+
+        LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
+        LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " MISS: " +  std::to_string(time));
+
+
+        /* prefetcher is in charge to restart the simulation */
+        prefetcher_.handleMiss(target_nr, parameters[0]); 
 
         //logs & stats
         dv_->getStatsPtr()->incMisses();
-        LOG(CLIENT, 0, "MISS: Restarting simulation! Params: " + parameters[0]);
     
-        /* extend the simulation interval according to the prefetcher:
-        *  MISSING - EXTEND_LEFT -> MISSING + EXTEND_RIGHT
-        *  At most one of the two extend_* is !=0:
-        *   FW trajectory: extend_left; BW trajectory: extend_right;
-        */
-        dv::id_type stride = prefetcher_.getStride();
-        dv::id_type extend_left = stride<0 ? -stride : 0;
-        dv::id_type extend_right = stride>0 ? stride : 0;
-
-        newSimulation(target_nr - extend_left, target_nr + extend_right, parameters[0]);
-
         return false;
+    } else { 
 
-    } else {
-        prefetcher_.handleHit(filename);
+        prefetcher_.handleHit(target_nr, parameters[0]);
+ 
+        if (cache_entry!=NULL && !cache_entry->isFileUsedBySimulator()){
+            // is a full hit: the data is available /
+            LOG(CLIENT, 0, "HIT! Data is available!");
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT: " +  std::to_string(time));
 
+            return true;
+        }else if (is_being_simulated){
+            dv_->getStatsPtr()->incWaiting();
+            LOG(CLIENT, 0, "HIT (WAIT): Data already being simulated by: " + std::to_string(already_simulating_job->getJobId()));
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT_WAIT: " +  std::to_string(time));
+
+            already_simulating_job->handleClientFileOpen(target_nr);
+            return false;
+        }else{
+            assert(cache_entry != NULL);
+            // the simulator is currently writing this file! 
+            LOG(CLIENT, 0, "HIT (WAIT): Simulator is writing on this file!");
+            LOG(CLIENT, 0, "[EVENT][" + std::to_string(appid_) + "] CLIENT_OPEN " + filename + " HIT_WAIT_W: " +  std::to_string(time));
+
+            //FIXME: not sure if this is still reachable and if it will succeed (e.g., who notifies the client?)
+            return false;
+        }
+
+        /*
+        This does not work well because the hits following a miss will be seen
+        as "HIT (WAIT)", instead of "HIT!", if the resimulation is going to 
+        produce these files. 
         if (is_being_simulated) {
-            /* there is a simulation that will produce this file */
+            // there is a simulation that will produce this file 
             //dv::id_type waiting_time = requested_nr - already_simulating_job->getCurrentNr();
             dv_->getStatsPtr()->incWaiting();
             LOG(CLIENT, 0, "HIT (WAIT): Data already being simulated by: " + std::to_string(already_simulating_job->getJobId()));
@@ -103,15 +128,17 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
             return false;
 
         } else if (cache_entry!=nullptr && cache_entry->isFileUsedBySimulator()) {
-            /* the simulator is currently writing this file! */
+            // the simulator is currently writing this file! 
             LOG(CLIENT, 0, "HIT (WAIT): Simulator is writing on this file!");
             return false;
 
         } else {
-            /* is a full hit: the data is available */
+            // is a full hit: the data is available /
             LOG(CLIENT, 0, "HIT! Data is available!");
             return true;
         }
+        */
+        
     }
 
 
@@ -119,12 +146,12 @@ bool ClientDescriptor::handleOpen(const std::string &filename,
     //		  << " open " << openop_
     //		  << " " << cli_profiler_.rstring()
     //		  << " " << sim_profiler_.rstring() << std::endl;
-    openop_++;
+    //openop_++;
 
 }
 
 
-bool ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams) {
+std::unique_ptr<SimJob> ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop, std::string strparams) {
     //create job parameters
     std::unique_ptr<toolbox::KeyValueStore> jobparameters = std::make_unique<toolbox::KeyValueStore>();
     jobparameters->fromString(strparams);
@@ -141,13 +168,13 @@ bool ClientDescriptor::newSimulation(dv::id_type target_nr, dv::id_type simstop,
 
         LOG(CLIENT, 0, "New simulation: ID: " + std::to_string(simjobid) + " range: " + std::to_string(simjob->getSimStart()) + " -> " + std::to_string(simjob->getSimStop()));
 
-        dv_->enqueueJob(simjobid, std::move(simjob));
+        //dv_->enqueueJob(simjobid, std::move(simjob));
         // do not access simjob after this point againA
         //LOG(CLIENT, 1, "Simulation added to queue with id " + std::to_string(simjobid));
-        return true;
+        return simjob;
     } else {
         LOG(WARNING, 0, "Simulation non needed or not possible (invalid simjob)!");
-        return false;
+        return nullptr;
     }
 }
 
@@ -156,9 +183,11 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
     auto it = known_sims_.find(jobid);
     if (it == known_sims_.end()) {
         // unknown
-        LOG(CLIENT, 1, "Simulation is *NOT* known, adding it to the known ones!");
+        //LOG(CLIENT, 1, "Simulation is *NOT* known, adding it to the known ones!");
         known_sims_.emplace(jobid);
         sim_profiler_.addAlpha(simjob->getSetupDuration());
+    
+        printf("SIMULATION NOT KNOW! Adding alpha: %lf\n", simjob->getSetupDuration());
 
         // this does not happen when prefetching is going, so it's
         // safe to get the taus from the simulator history.
@@ -171,7 +200,7 @@ void ClientDescriptor::handleNotification(SimJob *simjob) {
 
     } else {
         // known: register the tau
-        LOG(CLIENT, 1, "Simulation is known");
+        //LOG(CLIENT, 1, "Simulation is known");
         sim_profiler_.newTau();
     }
 

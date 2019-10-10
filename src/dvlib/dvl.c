@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #ifdef __NCMPI__
 #include <mpi.h>
@@ -62,13 +63,14 @@ int dvl_init(){
 
     dvl.is_simulator = (getenv("DV_SIMULATOR")!=NULL && atoi(getenv("DV_SIMULATOR"))==1);  
    
-    printf("DVL HELLO! Simulator: %i\n", dvl.is_simulator);
+    printf("[DVLIB] HELLO! Am I a simulator? %i\n", dvl.is_simulator);
 
 
-#ifdef BENCH
+#if defined(BENCH) || defined(PROFILE)
     char * lsb_name = getenv("LSB_NAME");
     if (lsb_name==NULL) lsb_name = "NA";
 
+#ifdef BENCH
     char * client_type = getenv("CLIENT_TYPE");
     if (client_type==NULL) client_type = "NA";
 
@@ -91,21 +93,23 @@ int dvl_init(){
 
     char buffname[256];
     snprintf(buffname, 256, "%s.%s", lsb_name, slurmid);
-
     LSB_Init(buffname, 0);
+#else   
+    LSB_Init("profile", 0);
+#endif
   
     for (int i=0; i<DVL_NC_TOTOPS; i++) dvl.opcount[i] = 0;
 
+#ifdef BENCH
     LSB_Set_Rparam_string("client_type", client_type);
     LSB_Set_Rparam_int("max_simjobs", max_simjobs);
     LSB_Set_Rparam_string("name", lsb_name);
     LSB_Set_Rparam_int("slurmrank", slurmrank);
     LSB_Set_Rparam_int("cache_size", cache_size);
     LSB_Set_Rparam_int("protected", protected);
-
-
     if (dvl.is_simulator) LSB_Set_Rparam_string("type", "simulator");
     else LSB_Set_Rparam_string("type", "client");
+#endif
     LSB_Res();
 #endif
 
@@ -209,7 +213,7 @@ int dvl_init(){
     dvl_send_message(buff, len, 0);
     dvl_recv_message(buff, BUFFER_SIZE, 1);
 
-    printf("HELLO success! Mes: %s;\n", buff);
+    //printf("HELLO success! Mes: %s;\n", buff);
 
     char * buffptr = buff;
 
@@ -230,7 +234,7 @@ int dvl_init(){
 #ifdef RDMA
     dvl_gni_init(&dvl.gni); 
     
-    printf("GNI rank: %u\n", dvl.gni.myrank);
+    //printf("GNI rank: %u\n", dvl.gni.myrank);
     if (dvl.is_simulator){
         if (getenv(ENV_GNI_ADDR)!=NULL){
             /* the addr of the client application that caused me */
@@ -246,9 +250,10 @@ int dvl_init(){
 
 
     atexit(dvl_finalize);
+    signal(SIGINT, dvl_sig_finalize);
+    signal(SIGTERM, dvl_sig_finalize);
 
-
-    printf("Init data structures\n");
+    //printf("Init data structures\n");
 
     /* initialize free file structures */
 #ifdef __MT__
@@ -302,7 +307,7 @@ int dvl_init(){
     dvl.finalized = 0;
     dvl.open_files_count = 0;
     
-    printf("DVL initialized!\n");
+    printf("[DVLIB] initialized!\n");
 
 #ifdef __MT__
     pthread_rwlock_unlock(&init_lock);
@@ -355,7 +360,11 @@ uint32_t dvl_get_current_rank() {
 }
 #endif
 
-void dvl_finalize(){
+void dvl_sig_finalize(int signo){
+    dvl_finalize();
+}
+
+void dvl_finalize(void){
     char buff[BUFFER_SIZE]; 
     int msgsize = BUFFER_SIZE;
 
@@ -388,7 +397,7 @@ void dvl_finalize(){
 #endif
 
 
-#ifdef BENCH
+#if defined(BENCH) || defined(PROFILE)
     LSB_Finalize();
 #endif
     //return DVL_SUCCESS;
@@ -410,18 +419,34 @@ int64_t file_size(const char *path) {
 char * is_result_file_COSMO(const char * path, char * npath){
     //char abspath[MAX_FILE_NAME];
 
-    realpath(path, npath);
+    char namebuff[MAX_FILE_NAME];
+    char pathbuff[MAX_FILE_NAME];
 
-    DVLPRINT("path: %s; npath: %s; dvl.respath: %s\n", path, npath, dvl.respath);
+    if (realpath(path, npath) == NULL){
+        //file may not exist, strip it out and get realpath of the folder
+        strncpy(pathbuff, path, MAX_FILE_NAME);    
+        strncpy(namebuff, path, MAX_FILE_NAME);    
+
+        char * fname = basename(namebuff);
+        char * dname = dirname(pathbuff);
+
+        if (realpath(dname, npath) == NULL) {   
+            DVLPRINT("cannot found the directory %s (filename: %s) --> returning NULL\n", dname, fname);
+            return NULL;
+        }
+        size_t len = strlen(npath);
+        snprintf(npath + len, MAX_FILE_NAME, "/%s", fname);
+    }
+
+    //DVLPRINT("path: %s; npath: %s; dvl.respath: %s\n", path, npath, dvl.respath);
     size_t rplen = strlen(dvl.respath);  
     
-    DVLPRINT("is_result_file ok: %lu %lu %i\n", strlen(npath), rplen, strncmp(npath, dvl.respath, rplen));
-
+    //DVLPRINT("is_result_file ok: %lu %lu %i\n", strlen(npath), rplen, strncmp(npath, dvl.respath, rplen));
 
     if (strlen(npath) >= rplen && !strncmp(npath, dvl.respath, rplen)){
         return npath + rplen; /* relapath return null-termianted string */
     }
-    DVLPRINT("returning NULL!!!\n");
+    //DVLPRINT("returning NULL -> %s is not a result file!\n", path);
 
     return NULL; 
 }
@@ -441,7 +466,7 @@ char * is_checkpoint_file_COSMO(const char * path, char * npath){
     if (strlen(npath) >= rplen && !strncmp(npath, dvl.checkpoint_path, rplen)){
         return npath + rplen; /* relapath return null-termianted string */
     }
-    DVLPRINT("returning NULL!!!\n");
+    DVLPRINT("returning NULL -> %s is not a checkpoint file!\n", path);
 
     return NULL; 
 }

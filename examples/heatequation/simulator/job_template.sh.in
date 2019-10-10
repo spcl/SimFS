@@ -1,10 +1,6 @@
 #!/bin/bash
 
-export LD_PRELOAD=__SIMFS_DIR__/build/lib/libdvl.so
-export DV_SIMULATOR=1
 export DV_JOBID=$jobid
-export DV_PROXY_SRV_IP=$dvl_address
-export DV_PROXY_SRV_PORT=$dvl_port
 
 START=$simstart
 STOP=$simstop
@@ -18,9 +14,8 @@ cd __SIMFS_DIR__/examples/heatequation/simulator/
 
 #check if the restart file exists to handle the case where we restart from 0
 if [ -f $$RESTART_FILE ]; then
-    python simulate.py -r $$RESTART_FILE -o $$OUTPUT -i $$STOP &
+    simfs heat simulate python simulate.py -r $$RESTART_FILE -o $$OUTPUT -i $$STOP &
 else
-    python simulate.py -o $$OUTPUT -i $$STOP &
-
+    simfs heat simulate python simulate.py -o $$OUTPUT -i $$STOP &
 fi
 

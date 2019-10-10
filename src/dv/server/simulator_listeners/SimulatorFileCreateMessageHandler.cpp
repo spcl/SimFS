@@ -11,6 +11,7 @@
 
 #include "../../toolbox/FileSystemHelper.h"
 #include "../../toolbox/StringHelper.h"
+#include "../../toolbox/TimeHelper.h"
 
 namespace dv {
 
@@ -49,6 +50,7 @@ SimulatorFileCreateMessageHandler::SimulatorFileCreateMessageHandler(DV *dv, int
  * - additional handling later only for files within the range of the simjob
  * - to avoid filename conflicts, also relative paths of the requested file must be considered
  *   thus: some subfolders may be generated if needed for a valid path.
+ * - no redirection is performend when in passive mode
  *
  * TODO: future option (soon):
  * - also handle create messages sent for restart/checkpoint files
@@ -117,7 +119,7 @@ void SimulatorFileCreateMessageHandler::serve() {
 
     FileDescriptor *fileDescriptor = dv_->getFileCachePtr()->internal_lookup_get(filename_);
 
-    if (fileDescriptor != nullptr) {
+    if (fileDescriptor != nullptr && !simjob->isPassive()) {
         // known file (which is valid part of a known simulator partition by definition)
         needsRedirect = fileDescriptor->isFileAvailable() || fileDescriptor->isFileUsedBySimulator();
     }
@@ -157,6 +159,11 @@ void SimulatorFileCreateMessageHandler::serve() {
                 std::cout << "   file was not asked for: ignore" << std::endl;
             }
         }
+
+        toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+        double time = toolbox::TimeHelper::seconds(dv_->start_time_, now);
+        LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " starts creating file " + filename_ + "; time: " + std::to_string(time));
+
     } else {
         if (dv_->getConfigPtr()->dv_debug_output_on_) {
             std::cout << "   ignore this file type" << std::endl;
@@ -187,7 +194,7 @@ void SimulatorFileCreateMessageHandler::serve() {
 
         }
 
-        LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+        //LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
         /*
         std::cout << "Simulation " << jobid_ << " is creating file " << filenam
         		  << " at redirected location " << fullRedirectName
@@ -199,7 +206,7 @@ void SimulatorFileCreateMessageHandler::serve() {
         reply += std::string(kMsgDelimiter) + fullRedirectName;
         sendAll(reply);
     } else {
-        LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
+        //LOG(SIMULATOR, 1, "Simulation " + std::to_string(jobid_) + " is creating " + filename_);
         //std::cout << "Simulation " << jobid_ << " is creating file " << filename_ << std::endl;
         //std::cout << "log_create " << filename_ << std::endl;
         sendAll(kLibReplyFileCreateAck);

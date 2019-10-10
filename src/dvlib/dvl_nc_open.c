@@ -24,16 +24,16 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
     dvl.ncopen = onc_open;
 
 
-    printf("open!! %s\n", opath);
+    //printf("open!! %s\n", opath);
 
     /* Check if this file is relevant to us */
     char * path = is_result_file(opath, npath);
     if (path==NULL) return (*onc_open)(opath, omode, ncidp);
-
+    DVL_PROFILE(DVL_NC_OPEN_ID, "dvl_nc_open", opath);
 
     if (!dvl.is_simulator) {
 
-        printf("DVL OPEN!\n");
+        //printf("DVL OPEN!\n");
 
 #ifdef __MT__
         if (pthread_rwlock_wrlock(&dvl.open_files_lock) != 0) fatal("_dvl_nc_open(): can't get wrlock");
@@ -88,15 +88,15 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         int is_meta=0;
 
         if (buff[0]==DVL_REPLY_FILE_SIM){
-            printf("File is not avail. Opening meta: %s\n", buff+1);
+            printf("[DVLIB] File is not avail. Opening meta: %s\n", buff+1);
             res = (*onc_open)(buff+1, omode, ncidp); 
             if (res!=NC_NOERR){
-                printf("Error opening metadata file\n");
+                printf("[DVLIB] Fake metadata file not found --> waiting for real data\n");
         
                 /*send fake get message to get the notification */
                 MAKE_MESSAGE(buff, msgsize, "%c:%s:%i:%i:", DVL_MSG_VGET, dfile->path, 0, dvl.gni.myrank);
 
-                printf("sending (%i): %s\n", msgsize, buff);
+                //printf("sending (%i): %s\n", msgsize, buff);
                 if (msgsize<0) return DVL_ERROR;
                 
 
@@ -104,6 +104,8 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
             
                 /* wait for notification */
                 dvl_recv_message(buff, BUFFER_SIZE, 1);
+                //assert(buff[0]==DVL_REPLY_FILE_READY);                
+
             }else{
                 is_meta=1;
                 dfile->state = DVL_FILE_SIM;
@@ -128,13 +130,13 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
 
         HASH_ADD_INT(dvl.open_files_idx, key, &(dvl.open_files[fileid]));
          
-        DVLPRINT("DVL_NC_OPEN: %s; fileid: %i; idx cnt: %u; res: %i; key: %i\n", path, fileid, HASH_COUNT(dvl.open_files_idx), res, *ncidp); 
+        DVLPRINT("[DVLIB] DVL_NC_OPEN: %s; fileid: %i; idx cnt: %u; res: %i; key: %i\n", path, fileid, HASH_COUNT(dvl.open_files_idx), res, *ncidp); 
 
 #ifdef __MT__
         pthread_rwlock_unlock(&dvl.open_files_lock);
 #endif
        
-
+        DVL_PROFILE_END;
         return res; 
     }else{ /* we don't care about the simulator */
         /*int msgsize = BUFFER_SIZE;
@@ -144,6 +146,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         dvl_send_message(buff, msgsize, 1);
         */
         printf("SIM OPEN!\n");
+        DVL_PROFILE_END;
         return (*onc_open)(opath, omode, ncidp);
     }
 }

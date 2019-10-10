@@ -46,8 +46,15 @@ void SimulatorFinalizeMessageHandler::serve() {
         return;
     }
 
+    std::vector<double> taus = simjob->getTaus();
+
+    /*for (double tau : taus){
+        printf("%li TAU %lf\n", jobid_, tau);
+    }*/
+   
     simjob->terminate();
-    dv_->removeJob(jobid_);
+    if (simjob->isPassive()) dv_->deindexJob(jobid_);
+    else dv_->removeJob(jobid_);
 
     close(socket_);
 }
