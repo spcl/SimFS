@@ -7,7 +7,7 @@
   1) Install depenencies
 
   2) Build DV 
-    - `./build_dv.sh` to install in current_dir/build
+    - `./build_dv.sh` to install in current_dir/build. Add build/bin/ to your $PATH to have the `simfs` command available.
     - `sudo ./build_dv.sh install` to install in /usr/bin
     
   3) Build DVLib
@@ -24,7 +24,7 @@
 
   2) Initialize `heat` environment:
     - `cd examples/heatequation/simulator` 
-    - `simfs init heat ../../../dv_config_files/heatequation.dv`
+    - `simfs heat init ../../../dv_config_files/heatequation.dv`
     - Note the heatequation.dv file is created by the DV build process.
 
 
