@@ -31,12 +31,12 @@
 **Run the heat equation example:**
 
   1) Run DV
-    - `simfs start heat`
-    - If you get a binding error, then specify different ports with: `simfs start heat -C <client_port> -S <server_port>
+    - `simfs heat start`
+    - If you get a binding error, then specify different ports with: `simfs heat start -C <client_port> -S <server_port>
 
   2) Run heat equation visulizer 
     - `cd examples/heatequation/client`
-    - `simfs run heat python reader2.py`
+    - `simfs heat run python reader2.py`
 
 
     
