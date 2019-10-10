@@ -29,7 +29,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
     /* Check if this file is relevant to us */
     char * path = is_result_file(opath, npath);
     if (path==NULL) return (*onc_open)(opath, omode, ncidp);
-
+    DVL_PROFILE(DVL_NC_OPEN_ID, "dvl_nc_open", opath);
 
     if (!dvl.is_simulator) {
 

@@ -13,28 +13,41 @@ fi
 #echo "Path to COSMO executable (lm_f90):"
 #read cosmo_exe
 
-echo "Path to input/ folder (without trailing '/'): "
+echo "Path to input/ folder: "
 read sim_input
+sim_input=$(echo $sim_input | sed 's:/*$::')
+guess_dir=$(dirname $sim_input)
 
-echo "Path to bc/ folder (without trailing '/', leave blank for ${sim_input}): "
+echo "Path to bc/ foler (leave blank for ${guess_dir}/bc): "
 read sim_bc
+sim_bc=$(echo $sim_bc | sed 's:/*$::')
 
 if [ -z $sim_bc ]; then
-  sim_bc=$sim_input
+  sim_bc=$guess_dir/bc
 fi
 
-echo "Path to restarts/ folder (without trailing '/', leave blank for ${sim_input}): "
+echo "Path to restarts/ folder (leave blank for ${guess_dir}/restarts): "
 read restarts
+restarts=$(echo $restarts | sed 's:/*$::')
 
 if [ -z $restarts ]; then
-  restarts=$sim_input
+  restarts=$guess_dir/restarts
 fi
 
-echo "Path to output/ folder (without trailing '/', leave blank for ${sim_input}): "
+echo "Create a restart file at the end of the simulation time? Leave blank for 'no', otherwise enter the simulation end date (format YYYYMMDDHH): "
+read end_date
+
+if [ ! -z $end_date ]; then
+    touch "$restarts/lrfd${end_date}o"
+    touch "$restarts/lrfd${end_date}0000o"
+fi
+
+echo "Path to output/ folder (leave blank for ${guess_dir}/output): "
 read results
+results=$(echo $results | sed 's:/*$::')
 
 if [ -z $results ]; then
-  results=$sim_input
+  results=$guess_dir/output
 fi
 
 echo "Path to temporary files directory (leave blank for $SCRATCH/tmp):"

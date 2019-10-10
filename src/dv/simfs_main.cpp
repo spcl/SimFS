@@ -131,16 +131,37 @@ int main(int argc, char * argv[]) {
         error_exit(argv[0], "Failed to load SimFS!");
     }
 
-
-    /* Parsing & checking arguments */
-    if (argc < 3) {
-        error_exit(argv[0], "An envirorment and a command are expected!");
+    if (argc < 1){
+        error_exit(argv[0], "Invalid usage: type 'simfs help' for examples.");
     }
 
     std::string envname(argv[1]);
-    std::string cmd(argv[2]);
+
+    /* Parsing & checking arguments */
+    if (argc < 3 &&  envname != SIMFS_HELP) {
+        error_exit(argv[0], "Invalid usage: type 'simfs help' for examples.");
+    }
+    
+
 
     /* Executing commands*/
+
+    if (envname == SIMFS_HELP) {   
+        
+        printf("General usage: %s <ctx name> <command> <cmd arguments>\n", argv[0]);
+        printf("Examples: \n");
+        printf(" - Create a simulation context: %s <ctx name> init <path to the conf. file>\n", argv[0]);    
+        printf(" - Index an output file (to show up in the 'simfs <ctx name> ls' command: %s <ctx name> index <path to result file>\n", argv[0]);
+        printf(" - Show the status of a output files directory: %s <ctx name> ls\n", argv[0]);
+        printf(" - Start DV (you need to do this before launching your application!) (close with CTRL-C or SIGTERM): %s <ctx name> start\n", argv[0]);
+        printf(" - Run analysis tool: %s <ctx name> run <app executable> <app arguments>\n", argv[0]);
+        printf(" - Run analysis tool with profiling: %s <ctx name> profile_run <app executable> <app arguments>\n", argv[0]);
+        exit(0);
+    } 
+
+
+    std::string cmd(argv[2]);
+
     if (cmd == SIMFS_INIT) {
 
         if (argc!=4) {
@@ -150,7 +171,7 @@ int main(int argc, char * argv[]) {
         std::string conf_file = argv[3];
         SimFSEnv env(fs, envname, conf_file);
 
-    } else if (cmd == SIMFS_RUN || cmd == SIMFS_SIMULATE) {
+    } else if (cmd == SIMFS_RUN || cmd == SIMFS_SIMULATE || cmd == SIMFS_PROFILE_RUN) {
         if (argc<3) {
             error_exit(argv[0], "Invalid syntax. See usage.");
         }
@@ -163,7 +184,10 @@ int main(int argc, char * argv[]) {
 
         /* LD_PRELOADING */
         const char * libname = getenv("SIMFS_DVLIB");
-        if (libname==NULL) libname = DEFAULT_DVLIB;
+        if (libname==NULL) {
+            if (cmd == SIMFS_PROFILE_RUN) libname = DEFAULT_PROFILE_DVLIB;
+            else libname = DEFAULT_DVLIB;
+        }
         setenv("LD_PRELOAD", (SIMFS_DVLIB + string(libname)).c_str(), 1);
 
         printf("SimFS envirorment: %s\n", envname.c_str());

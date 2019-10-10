@@ -105,6 +105,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
         path = is_result_file(cpath, npath);
         if (path != NULL) {
             file_type = DVL_FILETYPE_RESULT;
+            DVL_PROFILE(DVL_NC_CLOSE_ID, "dvl_nc_close", cpath);
         }
     }
 

@@ -66,10 +66,11 @@ int dvl_init(){
     printf("[DVLIB] HELLO! Am I a simulator? %i\n", dvl.is_simulator);
 
 
-#ifdef BENCH
+#if defined(BENCH) || defined(PROFILE)
     char * lsb_name = getenv("LSB_NAME");
     if (lsb_name==NULL) lsb_name = "NA";
 
+#ifdef BENCH
     char * client_type = getenv("CLIENT_TYPE");
     if (client_type==NULL) client_type = "NA";
 
@@ -92,21 +93,23 @@ int dvl_init(){
 
     char buffname[256];
     snprintf(buffname, 256, "%s.%s", lsb_name, slurmid);
-
     LSB_Init(buffname, 0);
+#else   
+    LSB_Init("profile", 0);
+#endif
   
     for (int i=0; i<DVL_NC_TOTOPS; i++) dvl.opcount[i] = 0;
 
+#ifdef BENCH
     LSB_Set_Rparam_string("client_type", client_type);
     LSB_Set_Rparam_int("max_simjobs", max_simjobs);
     LSB_Set_Rparam_string("name", lsb_name);
     LSB_Set_Rparam_int("slurmrank", slurmrank);
     LSB_Set_Rparam_int("cache_size", cache_size);
     LSB_Set_Rparam_int("protected", protected);
-
-
     if (dvl.is_simulator) LSB_Set_Rparam_string("type", "simulator");
     else LSB_Set_Rparam_string("type", "client");
+#endif
     LSB_Res();
 #endif
 
@@ -394,7 +397,7 @@ void dvl_finalize(void){
 #endif
 
 
-#ifdef BENCH
+#if defined(BENCH) || defined(PROFILE)
     LSB_Finalize();
 #endif
     //return DVL_SUCCESS;

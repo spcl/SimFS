@@ -147,6 +147,22 @@
     #define DVL_BENCH(ID) 
 #endif
 
+//BENCH is what we used for collecting the data for the paper. For production
+//now give the option to collect some "simpler" profiling info
+#ifdef PROFILE 
+    #ifdef __MT__
+    #error Multithreaded clients are not supported yet for LibLSB profiling
+    #endif
+
+    #include "liblsb.h"
+    #define DVL_PROFILE(ID, op_name, file_name) { \
+        LSB_Set_Rparam_string("op_name", op_name); \
+        LSB_Set_Rparam_int("op_count", dvl.opcount[ID]++); \
+        LSB_Check(ID); }
+#else
+    #define DVL_PROFILE(ID, op_name, file_name) {}
+#endif
+
 
 #ifdef __HDF5__
 #define DVL_CHECK_BENCH_ID_FOLLOWS { if (!init) { dvl_init();}; if (!dvl.enabled) {return 0;} }
@@ -353,7 +369,7 @@ typedef struct _dvl {
     // the same for checkpoint files
     char checkpoint_path[MAX_FILE_NAME];
 
-#ifdef BENCH
+#if defined(BENCH) || defined(PROFILE)
     uint32_t opcount[DVL_NC_TOTOPS];
 #endif
 

@@ -27,10 +27,13 @@
 #define SIMFS_LS "ls"
 #define SIMFS_INDEX "index"
 #define SIMFS_RUN "run"
+#define SIMFS_PROFILE_RUN "profile_run"
 #define SIMFS_SIMULATE "simulate"
 #define SIMFS_INFO "info"
+#define SIMFS_HELP "help"
 
 #define DEFAULT_DVLIB "libdvl.so"
+#define DEFAULT_PROFILE_DVLIB "libdvl_profile.so"
 
 using namespace std;
 using namespace toolbox;
