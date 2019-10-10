@@ -3,7 +3,7 @@
 //
 
 #include "SimulatorFileCloseMessageHandler.h"
-
+ 
 #include <memory>
 #include <unistd.h>
 #include <iostream>
@@ -148,20 +148,21 @@ void SimulatorFileCloseMessageHandler::serve() {
     simjob->handleSimulatorFileClose(filename_, fileDescriptor);
 
     toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
-    double time = toolbox::TimeHelper::seconds(dv_->start_time_, now);
+    double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
     //LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()));
     LOG(SIMULATOR, 1, "Simulator " + std::to_string(jobid_) + " created file " + filename_ + " (size: " + std::to_string(filesize_) + "B); tau: " + std::to_string(simjob->getLastTau()) + "; time: " + std::to_string(time));
 
-
-
-    //printf("filedescriptor: %p\n", fileDescriptor);
-
+    LOG(SIMULATOR, 1, "[EVENT][" + std::to_string(jobid_) + "] SIM_FILE_READY " +  filename_ + ": " + std::to_string(time));
+    
     // notifications
     // 1) update clientDescriptors (-> prepare for next requests)
     int client_notification_count = 0;
     for (auto client : fileDescriptor->getWaitingClientPtrs()) {
         client->handleNotification(simjob);
         ++client_notification_count;
+
+        LOG(SIMULATOR, 1, "[EVENT][" + std::to_string(client->getAppID()) + "] CLIENT_NOTIFICATION " + filename_ + ": " + std::to_string(time));
+
     }
     fileDescriptor->removeAllWaitingClientPtrs();
 
@@ -180,6 +181,8 @@ void SimulatorFileCloseMessageHandler::serve() {
     fileDescriptor->removeAllNotificationSockets();
 
     LOG(SIMULATOR, 3, "  -> " + std::to_string(socket_notification_count) + " analyses have been notified");
+
+
     //std::cout << "   notified " << socket_notification_count << " DVLib sockets in "
     //		  << client_notification_count << " clients." << std::endl;
 

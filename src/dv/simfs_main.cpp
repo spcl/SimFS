@@ -259,6 +259,9 @@ int main(int argc, char * argv[]) {
             error_exit(argv[0], "Failed to start the server!");
         }
 
+        /* this may update the port (e.g., passed port is 0) */
+        dv->startServer();    
+    
         /* Save the IP/PORT on which we are listening */
         simfs_env_addr_t addr;
         addr.ip = dv->getIpAddress();

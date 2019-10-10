@@ -61,7 +61,10 @@ void HelloMessageHandler::serve() {
             dv_->indexJob(jobid_, std::move(simjob_uptr));
         }
 
-        LOG(SIMULATOR, 1, "Hello from a simulator!");
+        toolbox::TimeHelper::time_point_type now = toolbox::TimeHelper::now();
+        double time = toolbox::TimeHelper::milliseconds(dv_->start_time_, now);
+        LOG(SIMULATOR, 1, "Hello from a simulator: " + std::to_string(time));
+        LOG(SIMULATOR, 1, "[EVENT][" + std::to_string(jobid_) + "] SIMHELLO: " + std::to_string(time));
 
         // adjust gnirank & and send message
         simJob->setGniRank(gnirank_);

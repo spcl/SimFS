@@ -71,6 +71,8 @@ namespace dv {
 
 		const std::string &getRedirectPath() const;
 
+		void startServer();
+
         void setPassive();
         bool isPassive();
     
@@ -152,7 +154,10 @@ namespace dv {
     
         /* if true, the server accepts all the incoming simulation requests */
         bool passive_mode_ = false;
-        
+
+        /* true if the sockets are already up */
+        bool listening_ = false;
+
 		toolbox::KeyValueStore statusSummary_;
         toolbox::KeyValueStore * file_idx_ = NULL;
         
@@ -199,9 +204,8 @@ namespace dv {
 		bool createRedirectFolder();
 		void removeRedirectFolder();
 
-		int startServerPart(const std::string &port);
+		int startServerPart(std::string &port);
 
-		void startServer();
 
 		void stopServer();
 
