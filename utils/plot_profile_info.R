@@ -21,7 +21,7 @@ pdf_file = args[2];
 profile_data <- ReadFile(file.path=prof_file, col=c("op_name", "op_count", "op_id", "id", "time", "overhead"), pheader=TRUE)
 profile_data.open <- subset(profile_data, op_name=="dvl_nc_open")
 
-lbls <- c("nc_open start", "nc_open_end")
+lbls <- c("nc_open_start", "nc_open_end")
 plot <- ggplot(data=profile_data.open, aes(x=time/1000, y=op_count)) +
   geom_line() + 
   geom_point(aes(color=factor(id), shape=factor(id)), size = 3) + 
