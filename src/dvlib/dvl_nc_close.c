@@ -151,6 +151,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
         if (dfile != dfile_check) {
             fprintf(stderr, "ERROR client calling _dvl_nc_close(): dfile structure removed by other thread before sending message (i.e. 2 close calls for the same file)");
             pthread_rwlock_unlock(&dvl.open_files_lock);
+            DVL_PROFILE_END;
             return toclose_res;
         }
 #endif
@@ -179,7 +180,7 @@ int _dvl_nc_close(int id, onc_close_t onc_close){
 
 
     //printf("to close: %i\n", toclose);
-
+    DVL_PROFILE_END;
     return toclose_res;
 
 }

@@ -136,7 +136,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         pthread_rwlock_unlock(&dvl.open_files_lock);
 #endif
        
-
+        DVL_PROFILE_END;
         return res; 
     }else{ /* we don't care about the simulator */
         /*int msgsize = BUFFER_SIZE;
@@ -146,6 +146,7 @@ int _dvl_nc_open(char * opath, int omode, int * ncidp, onc_open_t onc_open){
         dvl_send_message(buff, msgsize, 1);
         */
         printf("SIM OPEN!\n");
+        DVL_PROFILE_END;
         return (*onc_open)(opath, omode, ncidp);
     }
 }

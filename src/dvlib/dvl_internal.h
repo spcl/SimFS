@@ -158,9 +158,16 @@
     #define DVL_PROFILE(ID, op_name, file_name) { \
         LSB_Set_Rparam_string("op_name", op_name); \
         LSB_Set_Rparam_int("op_count", dvl.opcount[ID]++); \
-        LSB_Check(ID); }
+        LSB_Set_Rparam_int("op_id", ID); \
+        LSB_Check(0); }
+
+    #define DVL_PROFILE_END {\
+        LSB_Check(1);   \
+    }
+
 #else
     #define DVL_PROFILE(ID, op_name, file_name) {}
+    #define DVL_PROFILE_END {}
 #endif
 
 
